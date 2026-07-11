@@ -57,53 +57,73 @@ flowchart LR
 
 | 功能 | 说明 | 状态 |
 |---|---|---|
-| 双栏编辑器 | 左侧 Markdown 输入，右侧公众号样式实时预览 | 🚧 开发中 |
-| 排版引擎 | CommonMark + GFM（表格、代码块、任务清单），输出公众号兼容的 inline-styled HTML | 🚧 开发中 |
-| 一键复制 | 以 `text/html` 写入剪贴板，粘贴进公众号编辑器保留全部样式 | 🚧 开发中 |
-| 原创主题 | 多套排版主题可切换，覆盖不同文章调性 | ⬜ 规划中 |
-| 排版模块 | 卡片、引言、时间轴等高级版式的扩展语法 | ⬜ 规划中 |
-| 代码高亮 | 适配公众号限制的语法高亮方案 | ⬜ 规划中 |
-| 离线可用 | 静态站 + WASM，加载一次后断网照常工作 | ⬜ 规划中 |
+| 双栏编辑器 | 左侧 Markdown 输入，右侧公众号样式实时预览（含拖拽分隔线、手机/宽版切换） | ✅ 完成 |
+| 排版引擎 | CommonMark + GFM（表格、代码块、任务清单），输出公众号兼容的 inline-styled HTML | ✅ 完成 |
+| 一键复制 | 以 `text/html` 写入剪贴板（含 Safari 兼容路径），粘贴进公众号编辑器保留全部样式 | ✅ 完成 |
+| 原创主题 | 5 套原创主题可切换（晴川／墨白／晚报／松石／暖阳）＋ 自定义强调色 | ✅ 完成 |
+| 排版模块 | `:::` 容器语法：提示框、卡片、金句、时间轴等（见 [语法说明](docs/container-syntax.md)） | ✅ 完成 |
+| 编辑体验 | 字数统计、`.md` 导入／导出、Tab 缩进、`Cmd/Ctrl+B/I`、拖入文件、本地草稿 | ✅ 完成 |
+| 代码高亮 | 语法 token 上色（可选 feature；默认关以控体积，见 [体积说明](docs/size-baseline.md)） | 🚧 opt-in |
 
 ## 🚀 快速开始
 
-> 项目处于早期开发阶段，尚未发布可用版本。首个可用版本上线后，这一节会变成一句话：**打开网页，开始写。**
+**在线版**：托管于 Cloudflare Pages，打开即用、无需安装（部署见下方）。
 
-届时提供两种使用方式：
+**自部署（Docker，一行启动）**：
 
-1. **在线版**：托管于 Cloudflare Pages，打开即用，无需安装。
-2. **自部署**：`docker run` 一行命令，在你自己的服务器或 NAS 上跑同一套静态站。
+```bash
+docker build -f deploy/Dockerfile -t dc-wemark .
+docker run -p 8080:80 dc-wemark
+# 打开 http://localhost:8080
+```
 
 ## 🧱 技术架构
 
 | 层 | 技术 | 职责 |
 |---|---|---|
 | 排版核心 | Rust（编译至 WebAssembly） | Markdown 解析、主题样式内联、公众号 HTML 兼容处理 |
-| 前端壳 | 轻量 Web 前端 | 双栏编辑器、主题切换、剪贴板写入 |
+| 前端壳 | Vite + 原生 TypeScript（零框架） | 双栏编辑器、主题切换、剪贴板写入 |
 | 部署 | Cloudflare Pages（主）／Docker + nginx（自部署） | 纯静态文件分发，无服务器逻辑 |
 
-选 Rust + WASM 而不是纯 JavaScript，是为了同一个排版核心将来可以直接复用到 CLI 或其他形态，且核心逻辑有完整的类型与测试保障。
+选 Rust + WASM 而不是纯 JavaScript，是为了同一个排版核心将来可以直接复用到 CLI 或其他形态，且核心逻辑有完整的类型与测试保障。整站 gzip 约 130KB。
 
 ## 🛠️ 本地开发
+
+需要 Rust（stable）、[wasm-pack](https://github.com/rustwasm/wasm-pack) 与 Node 20+。
 
 ```bash
 git clone https://github.com/DylanChiang-Dev/DC-WeMark.git
 cd DC-WeMark
+
+cargo test               # 排版核心测试（纯 Rust）
+
+cd web
+npm install
+npm run build:wasm       # 构建 WASM 到前端
+npm run dev              # http://localhost:5173
+npm run build            # 产出 dist/
+npm run test:e2e         # Playwright e2e
 ```
 
-构建工具链（Rust + wasm-pack + 前端）的完整说明将随首个可运行版本补充。
+## ☁️ 部署到 Cloudflare Pages
+
+1. 在 Cloudflare Pages 创建 Direct Upload 项目，命名 `dc-wemark`。
+2. 在 GitHub repo Secrets 设置 `CLOUDFLARE_API_TOKEN` 与 `CLOUDFLARE_ACCOUNT_ID`。
+3. push 到 `main` 触发 [`deploy.yml`](.github/workflows/deploy.yml)：构建后 `wrangler pages deploy`。
+
+> Clipboard API 需要 HTTPS——Cloudflare Pages 自带 HTTPS，本地 `localhost` 也算安全上下文，均可正常复制。
 
 ## 📌 项目状态与路线图
 
-当前版本：**0.0.1 之前**（仓库初建，核心开发中）。
+当前版本：**1.0.0**（功能完成、自部署就绪；在线版待接入 Cloudflare 账号部署）。
 
-- [ ] **0.1.0** — 排版引擎 MVP：Markdown → 公众号兼容 HTML，含 1 套默认主题
-- [ ] **0.2.0** — 双栏编辑器 + 实时预览 + 一键复制
-- [ ] **0.3.0** — 多主题系统与主题切换
-- [ ] **0.4.0** — 高级排版模块（卡片、引言、时间轴等）
-- [ ] **1.0.0** — 在线版正式上线（Cloudflare Pages）+ Docker 自部署方案
+- [x] **0.1.0** — 排版引擎 MVP：Markdown → 公众号兼容 HTML，含 1 套默认主题
+- [x] **0.2.0** — 双栏编辑器 + 实时预览 + 一键复制
+- [x] **0.3.0** — 多主题系统与主题切换 + 自定义强调色
+- [x] **0.4.0** — 高级排版模块（提示框、卡片、金句、时间轴）
+- [x] **1.0.0** — Docker 自部署方案 + Cloudflare Pages 部署流程
 
-版本采用三段式语义化版本号，每个版本打 git tag。
+版本采用三段式语义化版本号，每个版本打 git tag。后续：富代码高亮的体积优化（延迟加载或 vendored 语法文件）。
 
 ## ⭐ Star 趋势
 

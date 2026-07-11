@@ -55,53 +55,73 @@ The two middle steps are the crux: the WeChat editor **only accepts rich text wi
 
 | Feature | Description | Status |
 |---|---|---|
-| Split-pane editor | Markdown input on the left, live WeChat-styled preview on the right | 🚧 In progress |
-| Typesetting engine | CommonMark + GFM (tables, code blocks, task lists) to WeChat-compatible inline-styled HTML | 🚧 In progress |
-| One-click copy | Writes `text/html` to the clipboard; paste into the WeChat editor with all styles intact | 🚧 In progress |
-| Original themes | Multiple switchable typesetting themes for different article tones | ⬜ Planned |
-| Layout modules | Extended syntax for cards, pull quotes, timelines, and other advanced layouts | ⬜ Planned |
-| Code highlighting | Syntax highlighting adapted to WeChat editor constraints | ⬜ Planned |
-| Offline capable | Static site + WASM; keeps working without a network after first load | ⬜ Planned |
+| Split-pane editor | Markdown input on the left, live WeChat-styled preview on the right (draggable divider, phone/wide toggle) | ✅ Done |
+| Typesetting engine | CommonMark + GFM (tables, code blocks, task lists) to WeChat-compatible inline-styled HTML | ✅ Done |
+| One-click copy | Writes `text/html` to the clipboard (incl. Safari path); paste into the WeChat editor with all styles intact | ✅ Done |
+| Original themes | 5 original switchable themes + custom accent color | ✅ Done |
+| Layout modules | `:::` container syntax: callouts, cards, pull quotes, timelines ([syntax](docs/container-syntax.md)) | ✅ Done |
+| Editing UX | Word count, `.md` import/export, Tab indent, `Cmd/Ctrl+B/I`, file drop, local draft | ✅ Done |
+| Code highlighting | Token coloring (optional feature; off by default to control size, see [size notes](docs/size-baseline.md)) | 🚧 opt-in |
 
 ## 🚀 Getting Started
 
-> Early development — no usable release yet. Once the first release ships, this section becomes one sentence: **open the page and start writing.**
+**Hosted**: on Cloudflare Pages, zero install (deployment below).
 
-Two ways to use it, eventually:
+**Self-hosted (Docker, one line)**:
 
-1. **Hosted**: on Cloudflare Pages, zero install.
-2. **Self-hosted**: a one-line `docker run` serves the same static site on your own server or NAS.
+```bash
+docker build -f deploy/Dockerfile -t dc-wemark .
+docker run -p 8080:80 dc-wemark
+# open http://localhost:8080
+```
 
 ## 🧱 Architecture
 
 | Layer | Tech | Responsibility |
 |---|---|---|
 | Typesetting core | Rust (compiled to WebAssembly) | Markdown parsing, theme style inlining, WeChat HTML compatibility |
-| Frontend shell | Lightweight web frontend | Split-pane editor, theme switching, clipboard write |
+| Frontend shell | Vite + vanilla TypeScript (no framework) | Split-pane editor, theme switching, clipboard write |
 | Deployment | Cloudflare Pages (primary) / Docker + nginx (self-host) | Static file serving, no server logic |
 
-Rust + WASM instead of plain JavaScript, so the same core can later be reused in a CLI or other form factors, with full type and test coverage on the core logic.
+Rust + WASM instead of plain JavaScript, so the same core can later be reused in a CLI or other form factors, with full type and test coverage on the core logic. Total site is ~130 KB gzipped.
 
 ## 🛠️ Development
+
+Requires Rust (stable), [wasm-pack](https://github.com/rustwasm/wasm-pack), and Node 20+.
 
 ```bash
 git clone https://github.com/DylanChiang-Dev/DC-WeMark.git
 cd DC-WeMark
+
+cargo test               # typesetting core tests (pure Rust)
+
+cd web
+npm install
+npm run build:wasm       # build WASM into the frontend
+npm run dev              # http://localhost:5173
+npm run build            # produce dist/
+npm run test:e2e         # Playwright e2e
 ```
 
-Full toolchain instructions (Rust + wasm-pack + frontend) will land with the first runnable version.
+## ☁️ Deploy to Cloudflare Pages
+
+1. Create a Direct Upload project on Cloudflare Pages named `dc-wemark`.
+2. Set `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` in the GitHub repo Secrets.
+3. Push to `main` triggers [`deploy.yml`](.github/workflows/deploy.yml): build then `wrangler pages deploy`.
+
+> The Clipboard API requires HTTPS — Cloudflare Pages provides it, and `localhost` counts as a secure context, so copy works in both.
 
 ## 📌 Status & Roadmap
 
-Current version: **pre-0.0.1** (repository just created, core under development).
+Current version: **1.0.0** (feature-complete, self-host ready; hosted release pending a Cloudflare account hookup).
 
-- [ ] **0.1.0** — Engine MVP: Markdown → WeChat-compatible HTML, with 1 default theme
-- [ ] **0.2.0** — Split-pane editor + live preview + one-click copy
-- [ ] **0.3.0** — Multi-theme system and switching
-- [ ] **0.4.0** — Advanced layout modules (cards, pull quotes, timelines, …)
-- [ ] **1.0.0** — Hosted release on Cloudflare Pages + Docker self-hosting
+- [x] **0.1.0** — Engine MVP: Markdown → WeChat-compatible HTML, with 1 default theme
+- [x] **0.2.0** — Split-pane editor + live preview + one-click copy
+- [x] **0.3.0** — Multi-theme system and switching + custom accent
+- [x] **0.4.0** — Advanced layout modules (callouts, cards, pull quotes, timelines)
+- [x] **1.0.0** — Docker self-hosting + Cloudflare Pages deploy pipeline
 
-Semantic three-part versioning; every release gets a git tag.
+Semantic three-part versioning; every release gets a git tag. Next: size optimization for rich code highlighting (lazy-loaded or vendored syntaxes).
 
 ## ⭐ Star History
 
