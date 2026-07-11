@@ -1,0 +1,178 @@
+# 晚報 — 雜誌襯線（Editorial / Magazine 風）
+# 原創設計：襯線字、暗紅點綴、寬鬆行距，帶紙本雜誌的閱讀感。
+
+[meta]
+id = "magazine"
+name = "晚報"
+description = "襯線字配暗紅點綴，雜誌編輯風，適合隨筆、評論與人文長文。"
+accent = "#a4343a"
+
+[palette]
+text = "#2b2622"
+muted = "#9c9188"
+border = "#e8e0d6"
+code-bg = "#f6f2ec"
+quote-text = "#5a4f47"
+quote-bg = "#faf6f0"
+
+[root]
+font-family = "Georgia, \"Times New Roman\", \"Songti SC\", \"SimSun\", \"Noto Serif CJK SC\", serif"
+font-size = "16px"
+line-height = "1.85"
+color = "{{text}}"
+letter-spacing = "0.2px"
+word-break = "break-word"
+
+[elements.h1]
+font-size = "26px"
+font-weight = "700"
+color = "{{text}}"
+line-height = "1.35"
+margin = "36px 0 8px"
+text-align = "center"
+
+[elements.h2]
+font-size = "21px"
+font-weight = "700"
+color = "{{accent}}"
+line-height = "1.4"
+margin = "30px 0 14px"
+padding-bottom = "6px"
+border-bottom = "1px solid {{border}}"
+
+[elements.h3]
+font-size = "18px"
+font-weight = "700"
+color = "{{text}}"
+margin = "24px 0 12px"
+
+[elements.h4]
+font-size = "16px"
+font-weight = "700"
+font-style = "italic"
+color = "{{muted}}"
+margin = "20px 0 10px"
+
+[elements.p]
+margin = "16px 0"
+line-height = "1.85"
+color = "{{text}}"
+
+[elements.strong]
+font-weight = "700"
+color = "{{accent}}"
+
+[elements.em]
+font-style = "italic"
+color = "{{text}}"
+
+[elements.del]
+color = "{{muted}}"
+text-decoration = "line-through"
+
+[elements.a]
+color = "{{accent}}"
+font-weight = "400"
+text-decoration = "none"
+border-bottom = "1px solid {{accent}}"
+
+[elements.blockquote]
+margin = "22px 0"
+padding = "14px 20px"
+color = "{{quote-text}}"
+background = "{{quote-bg}}"
+border-left = "3px solid {{accent}}"
+font-style = "italic"
+
+[elements.ul]
+margin = "16px 0"
+padding-left = "1.5em"
+
+[elements.ol]
+margin = "16px 0"
+padding-left = "1.5em"
+
+[elements.li]
+margin = "7px 0"
+line-height = "1.85"
+color = "{{text}}"
+
+[elements.hr]
+height = "1px"
+border = "none"
+background = "{{accent}}"
+width = "60px"
+margin = "30px auto"
+
+[elements.img]
+display = "block"
+max-width = "100%"
+height = "auto"
+margin = "20px auto"
+border-radius = "2px"
+
+[elements.code-inline]
+font-family = "\"SFMono-Regular\", Consolas, Menlo, monospace"
+font-size = "88%"
+color = "{{accent}}"
+background = "{{code-bg}}"
+padding = "2px 6px"
+border-radius = "3px"
+
+[elements.table]
+width = "100%"
+border-collapse = "collapse"
+margin = "20px 0"
+font-size = "15px"
+
+[elements.th]
+padding = "9px 12px"
+font-weight = "700"
+color = "{{text}}"
+background = "{{code-bg}}"
+border = "1px solid {{border}}"
+
+[elements.td]
+padding = "9px 12px"
+color = "{{text}}"
+border = "1px solid {{border}}"
+
+[elements.footnote-sup]
+color = "{{accent}}"
+font-size = "12px"
+padding = "0 2px"
+
+[elements.footnote-section]
+margin = "32px 0 0"
+padding-top = "16px"
+border-top = "1px solid {{border}}"
+font-size = "14px"
+color = "{{muted}}"
+
+[elements.footnote-title]
+margin = "0 0 8px"
+font-size = "15px"
+font-weight = "700"
+color = "{{text}}"
+
+[elements.footnote-item]
+margin = "4px 0"
+line-height = "1.6"
+word-break = "break-all"
+color = "{{muted}}"
+
+[code]
+theme = "InspiredGitHub"
+
+[code.block]
+font-family = "\"SFMono-Regular\", Consolas, Menlo, monospace"
+font-size = "13.5px"
+line-height = "1.6"
+color = "{{text}}"
+background = "{{code-bg}}"
+padding = "16px"
+margin = "20px 0"
+border-radius = "4px"
+border = "1px solid {{border}}"
+overflow-x = "auto"
+white-space = "pre"

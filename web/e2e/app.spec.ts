@@ -59,4 +59,8 @@ test('copy writes text/html to the clipboard', async ({ page, context, browserNa
   expect(html).toContain('<section');
   expect(html).toContain('複製測試');
   expect(html).not.toContain('class=');
+  // font-family 的雙引號必須轉義；否則瀏覽器會把 style 屬性解析壞掉，
+  // 產生像 `ui"=""` 這種殘骸（貼進公眾號會失真）。
+  expect(html).not.toMatch(/="">/);
+  expect(html).not.toContain('font-family:"');
 });

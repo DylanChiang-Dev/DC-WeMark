@@ -96,6 +96,21 @@ fn raw_html_is_escaped() {
 }
 
 #[test]
+fn style_attribute_quotes_are_escaped() {
+    // font-family 含雙引號的值必須被轉義，否則會提前關閉 style="…" 屬性。
+    let html = r("# 標題\n\n內文");
+    assert!(
+        html.contains("&quot;"),
+        "font-family quotes should be escaped to &quot;: {html}"
+    );
+    // 不應出現「未轉義雙引號緊接非空白」這種壞掉的屬性徵兆
+    assert!(
+        !html.contains("font-family:\""),
+        "raw double-quote right after font-family breaks the attribute: {html}"
+    );
+}
+
+#[test]
 fn unknown_theme_errors() {
     assert!(render("x", "does-not-exist", &RenderOptions::default()).is_err());
 }
@@ -103,4 +118,36 @@ fn unknown_theme_errors() {
 #[test]
 fn themes_list_contains_default() {
     assert!(wemark_core::themes().iter().any(|t| t.meta.id == "default"));
+}
+
+#[test]
+fn every_theme_renders_rich_doc_without_forbidden() {
+    let md = "# 標題\n\n**粗體** *斜體* `碼` [外鏈](https://example.com)\n\n\
+              > 引言\n\n\
+              | 左 | 右 |\n|:--|--:|\n| 1 | 2 |\n\n\
+              - a\n- b\n\n1. 一\n2. 二\n\n\
+              ```rust\nfn main() {}\n```\n\n---\n";
+    let themes = wemark_core::themes();
+    assert!(
+        themes.len() >= 4,
+        "expected >=4 themes, got {}",
+        themes.len()
+    );
+    for t in themes {
+        let html = render(md, t.meta.id, &RenderOptions::default())
+            .unwrap_or_else(|_| panic!("theme {} failed to render", t.meta.id))
+            .html;
+        assert!(
+            html.starts_with("<section style=\""),
+            "theme {} missing root section",
+            t.meta.id
+        );
+        for bad in ["class=", "<style", "<script", "position:", " id="] {
+            assert!(
+                !html.contains(bad),
+                "theme {} output contains forbidden `{bad}`",
+                t.meta.id
+            );
+        }
+    }
 }

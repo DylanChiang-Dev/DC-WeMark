@@ -15,11 +15,14 @@ pub fn render(pairs: Style, accent: &str) -> String {
     for (k, v) in pairs {
         s.push_str(k);
         s.push(':');
-        if v.contains(ACCENT_TOKEN) {
-            s.push_str(&v.replace(ACCENT_TOKEN, accent));
+        // CSS 值可能含雙引號（font-family: "PingFang SC"）——必須做 HTML 屬性轉義，
+        // 否則會提前關閉 style="…" 屬性、產生壞掉的 HTML（貼進公眾號會失真）。
+        let resolved = if v.contains(ACCENT_TOKEN) {
+            v.replace(ACCENT_TOKEN, accent)
         } else {
-            s.push_str(v);
-        }
+            (*v).to_string()
+        };
+        s.push_str(&crate::render::escape(&resolved));
         s.push(';');
     }
     s.push('"');

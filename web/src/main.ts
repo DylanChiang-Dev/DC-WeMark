@@ -31,14 +31,16 @@ const fileInput = $<HTMLInputElement>('fileInput');
 const appEl = document.querySelector<HTMLElement>('.app')!;
 
 let currentTheme = loadTheme() ?? 'default';
+let currentAccent = ''; // 空 = 用主題預設
 let lastHtml = '';
+const themeAccents = new Map<string, string>();
 
 const editor = createTextareaEditor(editorEl);
 const persistDraft = debouncedSaveDraft(1000);
 
 function renderPreview(): void {
   const md = editor.getValue();
-  const opts: RenderOptions = { externalFootnotes: true, accent: '' };
+  const opts: RenderOptions = { externalFootnotes: true, accent: currentAccent };
   try {
     const result = render(md, currentTheme, opts);
     lastHtml = result.html;
@@ -65,7 +67,8 @@ function toast(message: string): void {
 }
 
 async function onCopy(): Promise<void> {
-  if (!lastHtml) renderPreview();
+  // 同步以當前編輯器內容重繪，避免用到 debounce 尚未刷新的舊 HTML。
+  renderPreview();
   const plain = editor.getValue();
   try {
     const via = await copyHtml(lastHtml, plain);
@@ -163,15 +166,29 @@ async function boot(): Promise<void> {
   }
 
   const themes = listThemes();
+  for (const t of themes) themeAccents.set(t.id, t.accent);
   if (!themes.some((t) => t.id === currentTheme)) {
     currentTheme = themes[0]?.id ?? 'default';
   }
-  renderThemeSwitcher(themesEl, themes, currentTheme, (id) => {
-    currentTheme = id;
-    saveTheme(id);
+
+  const accentInput = $<HTMLInputElement>('accent');
+  const syncAccentSwatch = () => {
+    accentInput.value = themeAccents.get(currentTheme) ?? '#4c5bd4';
+  };
+  accentInput.addEventListener('input', () => {
+    currentAccent = accentInput.value;
     renderPreview();
   });
 
+  renderThemeSwitcher(themesEl, themes, currentTheme, (id) => {
+    currentTheme = id;
+    currentAccent = ''; // 切換主題時重置為主題預設強調色
+    saveTheme(id);
+    syncAccentSwatch();
+    renderPreview();
+  });
+
+  syncAccentSwatch();
   renderPreview();
   editor.focus();
 

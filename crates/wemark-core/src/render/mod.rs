@@ -129,15 +129,16 @@ impl Writer {
         } else {
             let st = style::render(self.theme.element("a"), &self.accent);
             self.out
-                .push_str(&format!("<a href={:?}{st}>{inner}</a>", escape(url)));
+                .push_str(&format!("<a href=\"{}\"{st}>{inner}</a>", escape(url)));
         }
     }
 
     fn render_image<'a>(&mut self, node: &'a AstNode<'a>, url: &str) {
+        // alt 來自子節點：render_children 已對文字做 HTML 轉義，strip_tags 去標籤後可直接放入屬性。
         let alt = strip_tags(&self.capture(|w| w.render_children(node)));
         let st = style::render(self.theme.element("img"), &self.accent);
         self.out
-            .push_str(&format!("<img src={:?} alt={alt:?}{st}>", escape(url)));
+            .push_str(&format!("<img src=\"{}\" alt=\"{alt}\"{st}>", escape(url)));
     }
 
     fn render_list<'a>(&mut self, node: &'a AstNode<'a>, nl: &NodeList) {

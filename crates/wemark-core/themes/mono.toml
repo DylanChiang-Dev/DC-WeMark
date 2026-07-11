@@ -1,0 +1,176 @@
+# 墨白 — 極簡黑白（Swiss / International 風）
+# 原創設計：純灰階、高對比、粗黑分隔，字型克制無襯線。
+
+[meta]
+id = "mono"
+name = "墨白"
+description = "純黑白高對比，Swiss 極簡風，適合觀點與長論述。"
+accent = "#111111"
+
+[palette]
+text = "#1a1a1a"
+muted = "#8a8a8a"
+border = "#e2e2e2"
+code-bg = "#f5f5f5"
+quote-text = "#3a3a3a"
+
+[root]
+font-family = "-apple-system, BlinkMacSystemFont, \"Segoe UI\", \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", Arial, sans-serif"
+font-size = "16px"
+line-height = "1.8"
+color = "{{text}}"
+letter-spacing = "0.2px"
+word-break = "break-word"
+
+[elements.h1]
+font-size = "24px"
+font-weight = "800"
+color = "{{text}}"
+line-height = "1.35"
+margin = "36px 0 18px"
+padding-bottom = "12px"
+border-bottom = "3px solid {{accent}}"
+
+[elements.h2]
+font-size = "20px"
+font-weight = "700"
+color = "{{text}}"
+line-height = "1.4"
+margin = "30px 0 14px"
+padding-left = "12px"
+border-left = "5px solid {{accent}}"
+
+[elements.h3]
+font-size = "17px"
+font-weight = "700"
+color = "{{text}}"
+margin = "24px 0 12px"
+
+[elements.h4]
+font-size = "16px"
+font-weight = "700"
+color = "{{muted}}"
+margin = "20px 0 10px"
+letter-spacing = "1px"
+
+[elements.p]
+margin = "16px 0"
+line-height = "1.8"
+color = "{{text}}"
+
+[elements.strong]
+font-weight = "800"
+color = "{{text}}"
+
+[elements.em]
+font-style = "italic"
+color = "{{text}}"
+
+[elements.del]
+color = "{{muted}}"
+text-decoration = "line-through"
+
+[elements.a]
+color = "{{accent}}"
+font-weight = "600"
+text-decoration = "underline"
+
+[elements.blockquote]
+margin = "20px 0"
+padding = "4px 0 4px 18px"
+color = "{{quote-text}}"
+border-left = "3px solid {{accent}}"
+font-style = "italic"
+
+[elements.ul]
+margin = "16px 0"
+padding-left = "1.3em"
+
+[elements.ol]
+margin = "16px 0"
+padding-left = "1.3em"
+
+[elements.li]
+margin = "7px 0"
+line-height = "1.8"
+color = "{{text}}"
+
+[elements.hr]
+height = "2px"
+border = "none"
+background = "{{accent}}"
+margin = "32px 0"
+
+[elements.img]
+display = "block"
+max-width = "100%"
+height = "auto"
+margin = "20px auto"
+
+[elements.code-inline]
+font-family = "\"SFMono-Regular\", Consolas, Menlo, monospace"
+font-size = "90%"
+color = "{{text}}"
+background = "{{code-bg}}"
+padding = "2px 6px"
+border-radius = "3px"
+
+[elements.table]
+width = "100%"
+border-collapse = "collapse"
+margin = "18px 0"
+font-size = "15px"
+
+[elements.th]
+padding = "9px 12px"
+font-weight = "700"
+color = "{{text}}"
+border-top = "2px solid {{accent}}"
+border-bottom = "2px solid {{accent}}"
+
+[elements.td]
+padding = "9px 12px"
+color = "{{text}}"
+border-bottom = "1px solid {{border}}"
+
+[elements.footnote-sup]
+color = "{{accent}}"
+font-size = "12px"
+font-weight = "700"
+padding = "0 2px"
+
+[elements.footnote-section]
+margin = "32px 0 0"
+padding-top = "16px"
+border-top = "2px solid {{accent}}"
+font-size = "14px"
+color = "{{muted}}"
+
+[elements.footnote-title]
+margin = "0 0 8px"
+font-size = "15px"
+font-weight = "700"
+color = "{{text}}"
+letter-spacing = "1px"
+
+[elements.footnote-item]
+margin = "4px 0"
+line-height = "1.6"
+word-break = "break-all"
+color = "{{muted}}"
+
+[code]
+theme = "InspiredGitHub"
+
+[code.block]
+font-family = "\"SFMono-Regular\", Consolas, Menlo, monospace"
+font-size = "14px"
+line-height = "1.6"
+color = "{{text}}"
+background = "{{code-bg}}"
+padding = "16px"
+margin = "18px 0"
+border-radius = "4px"
+border-left = "3px solid {{accent}}"
+overflow-x = "auto"
+white-space = "pre"
