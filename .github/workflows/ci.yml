@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  rust:
+    name: fmt · clippy · test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: rustfmt
+        run: cargo fmt --all --check
+      - name: clippy (default)
+        run: cargo clippy --all-targets -- -D warnings
+      - name: clippy (syntax-highlight)
+        run: cargo clippy --all-targets --features syntax-highlight -- -D warnings
+      - name: test (default)
+        run: cargo test
+      - name: test (syntax-highlight)
+        run: cargo test --features syntax-highlight
+
+  wasm:
+    name: wasm build · size gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      - name: install wasm-pack
+        uses: jetli/wasm-pack-action@v0.4.0
+        with:
+          version: latest
+      - name: build (lean default)
+        run: wasm-pack build crates/wemark-core --target web --release --out-dir pkg
+      - name: gzip size gate (< 260 KB)
+        run: |
+          f=crates/wemark-core/pkg/wemark_core_bg.wasm
+          gz=$(gzip -9 -c "$f" | wc -c)
+          echo "wasm gzip size: $((gz/1024)) KB ($gz bytes)"
+          limit=$((260*1024))
+          if [ "$gz" -gt "$limit" ]; then
+            echo "::error::wasm gzip $((gz/1024)) KB exceeds 260 KB budget"
+            exit 1
+          fi

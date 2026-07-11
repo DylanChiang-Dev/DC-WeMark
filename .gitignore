@@ -1,8 +1,9 @@
 # Rust
 /target
 
-# WASM build output
-/pkg
+# WASM build output (wasm-pack out dirs, any level)
+pkg/
+pkg-node/
 *.wasm
 
 # Node / frontend

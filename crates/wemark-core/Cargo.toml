@@ -1,0 +1,51 @@
+[package]
+name = "wemark-core"
+description = "Markdown to WeChat-compatible inline-styled HTML typesetting engine"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+# 只用 comrak 的 parser 產 AST，自寫渲染器；不開任何 default features
+# （default 含 cli 與 syntect-onig，onig 在 wasm32 下無法建置）
+comrak = { version = "~0.50", default-features = false }
+# 程式碼高亮執行期：fancy-regex 引擎，不含任何內建語法/主題資料——
+# 語法與主題由 build.rs 產出的「精簡 dump」以 include_bytes! 嵌入，載入自它。
+syntect = { version = "5", optional = true, default-features = false, features = [
+  "regex-fancy",
+  "parsing",
+  "html",
+] }
+
+# syntax-highlight 預設關閉：完整 syntect 語法集 gzip 約 +700KB，會爆掉體積預算。
+# 關閉時程式碼區塊保留主題外殼 + 純文字（可讀、等寬，無 token 上色）。
+# 開啟則得到完整 syntect 高亮但體積大幅上升——適合不在意體積的自架/桌面場景。
+# 未來以「延遲載入的獨立語法資產」提供富高亮而不犧牲首屏體積。
+[features]
+default = []
+syntax-highlight = ["dep:syntect"]
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2"
+
+[build-dependencies]
+toml = "0.8"
+# build 期用完整語法/主題集，過濾出精簡子集再 dump（僅在 host 執行，不進 wasm）。
+syntect = { version = "5", default-features = false, features = [
+  "regex-fancy",
+  "parsing",
+  "default-syntaxes",
+  "default-themes",
+] }
+
+[dev-dependencies]
+insta = "1"
+
+[package.metadata.wasm-pack.profile.release]
+# 現代 rustc 產出的 wasm 用到 bulk-memory / sign-ext 等特性，
+# 需向（版本較舊的）bundled wasm-opt 顯式啟用，否則驗證失敗。
+wasm-opt = ["-Oz", "--enable-bulk-memory", "--enable-sign-ext", "--enable-nontrapping-float-to-int", "--enable-mutable-globals"]
