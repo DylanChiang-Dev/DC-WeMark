@@ -4,12 +4,16 @@
 # WASM build output (wasm-pack out dirs, any level)
 pkg/
 pkg-node/
+web/src/wasm/
 *.wasm
 
 # Node / frontend
 node_modules/
 dist/
 .cache/
+test-results/
+playwright-report/
+.last-run.json
 
 # Editor & OS
 .DS_Store

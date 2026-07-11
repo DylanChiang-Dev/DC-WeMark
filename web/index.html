@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DC-WeMark · Markdown 轉公眾號排版</title>
+    <meta
+      name="description"
+      content="在瀏覽器裡把 Markdown 排版成微信公眾號文章，一鍵複製、純前端、無後端。"
+    />
+    <link rel="stylesheet" href="./src/styles/app.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand__mark">令</span>
+          <div class="brand__text">
+            <strong>DC-WeMark</strong>
+            <span class="brand__sub">Markdown → 公眾號</span>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <div class="themes" id="themes" role="tablist" aria-label="主題"></div>
+          <div class="widthtoggle" id="widthToggle" role="group" aria-label="預覽寬度">
+            <button data-w="phone" class="is-active" type="button">手機</button>
+            <button data-w="wide" type="button">寬版</button>
+          </div>
+          <button class="btn btn--ghost" id="importBtn" type="button" title="匯入 .md">匯入</button>
+          <button class="btn btn--ghost" id="exportBtn" type="button" title="下載 .md">匯出</button>
+          <button class="btn btn--primary" id="copyBtn" type="button">複製到公眾號</button>
+        </div>
+      </header>
+
+      <main class="panes">
+        <section class="pane pane--editor" aria-label="Markdown 編輯器">
+          <textarea
+            id="editor"
+            spellcheck="false"
+            autocomplete="off"
+            autocapitalize="off"
+            placeholder="在這裡寫 Markdown…"
+          ></textarea>
+        </section>
+
+        <div class="divider" id="divider" role="separator" aria-orientation="vertical"></div>
+
+        <section class="pane pane--preview" aria-label="公眾號預覽">
+          <div class="phone" id="phone">
+            <article class="preview" id="preview"></article>
+          </div>
+        </section>
+      </main>
+
+      <footer class="statusbar">
+        <span id="wordcount">0 字</span>
+        <span class="statusbar__spacer"></span>
+        <span id="status">載入引擎中…</span>
+      </footer>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <input type="file" id="fileInput" accept=".md,.markdown,.txt" hidden />
+
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,62 @@
+import { test, expect } from '@playwright/test';
+
+test('loads and renders the sample article in the preview', async ({ page }) => {
+  await page.goto('/');
+  const previewH1 = page.locator('#preview h1');
+  await expect(previewH1).toBeVisible({ timeout: 15_000 });
+  // 預覽輸出帶 inline style（公眾號相容）
+  await expect(page.locator('#preview section[style]').first()).toBeVisible();
+});
+
+test('typing updates the preview', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });
+  const editor = page.locator('#editor');
+  await editor.fill('# 全新標題\n\n一段測試文字。');
+  await expect(page.locator('#preview h1')).toHaveText('全新標題');
+});
+
+test('switching theme changes preview styling', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });
+  const pills = page.locator('.theme-pill');
+  const count = await pills.count();
+  expect(count).toBeGreaterThan(0);
+  const rootStyleBefore = await page.locator('#preview > section').getAttribute('style');
+  if (count > 1) {
+    await pills.nth(1).click();
+    const rootStyleAfter = await page.locator('#preview > section').getAttribute('style');
+    expect(rootStyleAfter).not.toEqual(rootStyleBefore);
+  }
+});
+
+test('word count reflects editor content', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });
+  await page.locator('#editor').fill('你好世界');
+  await expect(page.locator('#wordcount')).toHaveText('4 字');
+});
+
+test('copy writes text/html to the clipboard', async ({ page, context, browserName }) => {
+  test.skip(browserName === 'webkit', 'WebKit blocks clipboard read in automation');
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.goto('/');
+  await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });
+  await page.locator('#editor').fill('# 複製測試\n\n**粗體**內容。');
+  await page.locator('#copyBtn').click();
+  await expect(page.locator('#toast')).toHaveClass(/is-show/);
+
+  const html = await page.evaluate(async () => {
+    const items = await navigator.clipboard.read();
+    for (const item of items) {
+      if (item.types.includes('text/html')) {
+        const blob = await item.getType('text/html');
+        return await blob.text();
+      }
+    }
+    return '';
+  });
+  expect(html).toContain('<section');
+  expect(html).toContain('複製測試');
+  expect(html).not.toContain('class=');
+});

@@ -30,8 +30,8 @@ jobs:
       - name: test (syntax-highlight)
         run: cargo test --features syntax-highlight
 
-  wasm:
-    name: wasm build · size gate
+  web:
+    name: wasm · web build · e2e · size gate
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -43,15 +43,35 @@ jobs:
         uses: jetli/wasm-pack-action@v0.4.0
         with:
           version: latest
-      - name: build (lean default)
-        run: wasm-pack build crates/wemark-core --target web --release --out-dir pkg
-      - name: gzip size gate (< 260 KB)
+      - name: build wasm (lean default)
+        run: wasm-pack build crates/wemark-core --target web --release --out-dir ../../web/src/wasm
+      - name: wasm gzip size gate (< 260 KB)
         run: |
-          f=crates/wemark-core/pkg/wemark_core_bg.wasm
+          f=web/src/wasm/wemark_core_bg.wasm
           gz=$(gzip -9 -c "$f" | wc -c)
           echo "wasm gzip size: $((gz/1024)) KB ($gz bytes)"
-          limit=$((260*1024))
-          if [ "$gz" -gt "$limit" ]; then
-            echo "::error::wasm gzip $((gz/1024)) KB exceeds 260 KB budget"
-            exit 1
-          fi
+          [ "$gz" -le $((260*1024)) ] || { echo "::error::wasm gzip $((gz/1024)) KB exceeds 260 KB"; exit 1; }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: install web deps
+        working-directory: web
+        run: npm ci
+      - name: typecheck + build
+        working-directory: web
+        run: npm run build
+      - name: total site gzip size gate (< 300 KB)
+        working-directory: web
+        run: |
+          total=$(find dist -type f \( -name '*.js' -o -name '*.css' -o -name '*.wasm' -o -name '*.html' \) \
+            -exec sh -c 'gzip -9 -c "$1" | wc -c' _ {} \; | awk '{s+=$1} END {print s}')
+          echo "total gzip size: $((total/1024)) KB ($total bytes)"
+          [ "$total" -le $((300*1024)) ] || { echo "::error::site gzip $((total/1024)) KB exceeds 300 KB"; exit 1; }
+      - name: install Playwright (chromium)
+        working-directory: web
+        run: npx playwright install --with-deps chromium
+      - name: e2e (chromium)
+        working-directory: web
+        run: npx playwright test --project=chromium
