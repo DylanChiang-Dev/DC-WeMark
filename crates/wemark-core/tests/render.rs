@@ -111,6 +111,51 @@ fn style_attribute_quotes_are_escaped() {
 }
 
 #[test]
+fn container_renders_section_shell() {
+    let html = r("::: note\n這是一段提示。\n:::\n");
+    // 容器外殼 + 內部段落都在
+    assert!(
+        html.contains("border-left:4px solid #3b82f6"),
+        "note shell missing: {html}"
+    );
+    assert!(html.contains("這是一段提示"));
+    // 內部 markdown 仍被解析成 <p>
+    assert!(html.contains("<p style=\""));
+}
+
+#[test]
+fn nested_containers_balance() {
+    let html = r("::: card\n外層\n\n::: tip\n內層\n:::\n\n:::\n");
+    let opens = html.matches("<section").count();
+    let closes = html.matches("</section>").count();
+    assert_eq!(opens, closes, "unbalanced sections: {html}");
+    assert!(html.contains("外層") && html.contains("內層"));
+}
+
+#[test]
+fn unclosed_container_auto_closes_without_losing_content() {
+    let res = render("::: warn\n沒有關閉\n", "default", &RenderOptions::default()).unwrap();
+    assert!(res.html.contains("沒有關閉"));
+    assert_eq!(
+        res.html.matches("<section").count(),
+        res.html.matches("</section>").count()
+    );
+    assert!(!res.warnings.is_empty(), "should warn about auto-close");
+}
+
+#[test]
+fn colons_inside_code_fence_are_literal() {
+    let html = r("```\n::: note\n:::\n```\n");
+    // 不應產生容器 section（除了根 section）
+    assert_eq!(
+        html.matches("<section").count(),
+        1,
+        "fence content became a container: {html}"
+    );
+    assert!(html.contains("::: note"));
+}
+
+#[test]
 fn unknown_theme_errors() {
     assert!(render("x", "does-not-exist", &RenderOptions::default()).is_err());
 }

@@ -37,6 +37,15 @@ test('word count reflects editor content', async ({ page }) => {
   await expect(page.locator('#wordcount')).toHaveText('4 字');
 });
 
+test('inserting a module renders a container in the preview', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });
+  await page.locator('#editor').fill('# 標題\n');
+  await page.selectOption('#insertModule', 'warn');
+  // warn 容器外殼帶琥珀色左邊條
+  await expect(page.locator('#preview section[style*="#f59e0b"]')).toBeVisible();
+});
+
 test('copy writes text/html to the clipboard', async ({ page, context, browserName }) => {
   test.skip(browserName === 'webkit', 'WebKit blocks clipboard read in automation');
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);

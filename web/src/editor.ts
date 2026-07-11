@@ -3,6 +3,7 @@
 export interface EditorAdapter {
   getValue(): string;
   setValue(v: string): void;
+  insertSnippet(text: string): void;
   onChange(cb: (value: string) => void): void;
   focus(): void;
 }
@@ -57,6 +58,14 @@ export function createTextareaEditor(el: HTMLTextAreaElement): EditorAdapter {
     getValue: () => el.value,
     setValue: (v: string) => {
       el.value = v;
+      emit();
+    },
+    insertSnippet: (text: string) => {
+      const { selectionStart, selectionEnd, value } = el;
+      el.value = value.slice(0, selectionStart) + text + value.slice(selectionEnd);
+      const caret = selectionStart + text.length;
+      el.selectionStart = el.selectionEnd = caret;
+      el.focus();
       emit();
     },
     onChange: (cb) => listeners.push(cb),

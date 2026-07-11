@@ -4,6 +4,7 @@
 //! 標籤；外部連結收集成文末腳註；原始 HTML 一律轉義（XSS 邊界）。
 
 mod code;
+mod containers;
 
 use comrak::nodes::{AstNode, ListType, NodeList, NodeTable, NodeValue, TableAlignment};
 
@@ -22,6 +23,8 @@ pub struct Writer {
     pub warnings: Vec<String>,
     /// 是否處於 tight list 語境（段落不加 <p> 外殼）。
     tight: bool,
+    /// 目前開啟中的 `:::` 容器數（用於文末自動閉合未關閉的容器）。
+    container_depth: usize,
 }
 
 impl Writer {
@@ -38,6 +41,7 @@ impl Writer {
             footnotes: Vec::new(),
             warnings: Vec::new(),
             tight: false,
+            container_depth: 0,
         }
     }
 
@@ -48,6 +52,12 @@ impl Writer {
     /// 渲染整份文件，回傳被根 <section> 包裹的完整 HTML。
     pub fn finish<'a>(&mut self, root: &'a AstNode<'a>) -> String {
         self.render_children(root);
+        // 自動閉合未關閉的容器（寬容處理，不吞內容）
+        while self.container_depth > 0 {
+            self.out.push_str("</section>");
+            self.container_depth -= 1;
+            self.warnings.push("未閉合的排版容器已自動閉合".to_string());
+        }
         if self.external_footnotes && !self.footnotes.is_empty() {
             self.render_references();
         }
@@ -99,7 +109,7 @@ impl Writer {
                 self.out.push_str(&format!("<hr{st}>"));
             }
             NodeValue::Table(t) => self.render_table(node, &t),
-            NodeValue::HtmlBlock(h) => self.out.push_str(&escape(&h.literal)),
+            NodeValue::HtmlBlock(h) => self.handle_html_block(&h.literal),
             NodeValue::HtmlInline(h) => self.out.push_str(&escape(&h)),
             _ => self.render_children(node),
         }
@@ -170,6 +180,28 @@ impl Writer {
         self.out.push_str(if checked { "☑ " } else { "☐ " });
         self.render_children(node);
         self.out.push_str("</li>");
+    }
+
+    /// HtmlBlock：攔截 `:::` 容器標記，其餘原始 HTML 一律轉義。
+    fn handle_html_block(&mut self, literal: &str) {
+        let t = literal.trim();
+        if t == "<!--wm:close-->" {
+            if self.container_depth > 0 {
+                self.out.push_str("</section>");
+                self.container_depth -= 1;
+            }
+            return;
+        }
+        if let Some(name) = t
+            .strip_prefix("<!--wm:open:")
+            .and_then(|s| s.strip_suffix("-->"))
+        {
+            let shell = containers::shell_style(name, &self.accent);
+            self.out.push_str(&format!("<section{shell}>"));
+            self.container_depth += 1;
+            return;
+        }
+        self.out.push_str(&escape(literal));
     }
 
     fn render_code_block(&mut self, info: &str, literal: &str) {

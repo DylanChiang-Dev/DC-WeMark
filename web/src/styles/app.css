@@ -187,6 +187,23 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
+/* ---------- Select ---------- */
+.select {
+  font-family: inherit;
+  font-size: 13px;
+  padding: 7px 10px;
+  color: var(--ink-soft);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: border-color var(--dur) var(--ease);
+}
+
+.select:hover {
+  border-color: var(--ink-faint);
+}
+
 /* ---------- Buttons ---------- */
 .btn {
   font-family: inherit;
