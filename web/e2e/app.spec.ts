@@ -37,6 +37,20 @@ test('word count reflects editor content', async ({ page }) => {
   await expect(page.locator('#wordcount')).toHaveText('4 字');
 });
 
+test('custom accent persists across reload', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });
+  await page.locator('#accent').evaluate((el) => {
+    const input = el as HTMLInputElement;
+    input.value = '#ff0066';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  await expect(page.locator('#preview h1')).toHaveAttribute('style', /#ff0066/i);
+  await page.reload();
+  await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('#accent')).toHaveValue('#ff0066');
+});
+
 test('inserting a module renders a container in the preview', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });

@@ -241,6 +241,17 @@ body {
   background: #4150c4;
 }
 
+/* 只在窄螢幕顯示的「切換預覽」按鈕 */
+.btn--mobile {
+  display: none;
+}
+
+@media (max-width: 820px) {
+  .btn--mobile {
+    display: inline-block;
+  }
+}
+
 /* ---------- Panes ---------- */
 .panes {
   display: grid;

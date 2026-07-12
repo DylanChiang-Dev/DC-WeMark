@@ -8,8 +8,10 @@ import { renderThemeSwitcher } from './themes.js';
 import {
   clearDraft,
   debouncedSaveDraft,
+  loadAccent,
   loadDraft,
   loadTheme,
+  saveAccent,
   saveTheme,
 } from './storage.js';
 import { countWords, debounce, downloadText } from './util.js';
@@ -31,7 +33,7 @@ const fileInput = $<HTMLInputElement>('fileInput');
 const appEl = document.querySelector<HTMLElement>('.app')!;
 
 let currentTheme = loadTheme() ?? 'default';
-let currentAccent = ''; // 空 = 用主題預設
+let currentAccent = loadAccent(); // 空 = 用主題預設
 let lastHtml = '';
 const themeAccents = new Map<string, string>();
 
@@ -154,12 +156,27 @@ function setupFileIO(): void {
 }
 
 function setupMobileToggle(): void {
-  // 窄螢幕：複製鍵旁沒有預覽，改由點狀態列切換（簡易）
+  const toggle = () => appEl.classList.toggle('show-preview');
+  // 窄螢幕可見按鈕
+  $('mobileToggle').addEventListener('click', toggle);
+  // 桌面快捷鍵
   document.addEventListener('keydown', (e) => {
     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
       e.preventDefault();
-      appEl.classList.toggle('show-preview');
+      toggle();
     }
+  });
+}
+
+// 依比例把左欄捲動同步到右欄預覽（單向，避免回饋迴圈）。
+function setupScrollSync(): void {
+  const previewPane = document.querySelector<HTMLElement>('.pane--preview')!;
+  editorEl.addEventListener('scroll', () => {
+    const max = editorEl.scrollHeight - editorEl.clientHeight;
+    if (max <= 0) return;
+    const ratio = editorEl.scrollTop / max;
+    const target = previewPane.scrollHeight - previewPane.clientHeight;
+    previewPane.scrollTop = ratio * target;
   });
 }
 
@@ -169,6 +186,7 @@ async function boot(): Promise<void> {
   setupFileIO();
   setupModuleInserter();
   setupMobileToggle();
+  setupScrollSync();
   $('copyBtn').addEventListener('click', () => void onCopy());
 
   const draft = loadDraft();
@@ -193,16 +211,18 @@ async function boot(): Promise<void> {
 
   const accentInput = $<HTMLInputElement>('accent');
   const syncAccentSwatch = () => {
-    accentInput.value = themeAccents.get(currentTheme) ?? '#4c5bd4';
+    accentInput.value = currentAccent || themeAccents.get(currentTheme) || '#4c5bd4';
   };
   accentInput.addEventListener('input', () => {
     currentAccent = accentInput.value;
+    saveAccent(currentAccent);
     renderPreview();
   });
 
   renderThemeSwitcher(themesEl, themes, currentTheme, (id) => {
     currentTheme = id;
     currentAccent = ''; // 切換主題時重置為主題預設強調色
+    saveAccent('');
     saveTheme(id);
     syncAccentSwatch();
     renderPreview();

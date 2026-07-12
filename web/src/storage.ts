@@ -2,6 +2,7 @@
 
 const DRAFT_KEY = 'wemark:draft:v1';
 const THEME_KEY = 'wemark:theme:v1';
+const ACCENT_KEY = 'wemark:accent:v1';
 
 export function loadDraft(): string | null {
   try {
@@ -38,6 +39,24 @@ export function loadTheme(): string | null {
 export function saveTheme(id: string): void {
   try {
     localStorage.setItem(THEME_KEY, id);
+  } catch {
+    // 忽略
+  }
+}
+
+/** 自訂強調色覆寫；空字串表示用主題預設。 */
+export function loadAccent(): string {
+  try {
+    return localStorage.getItem(ACCENT_KEY) ?? '';
+  } catch {
+    return '';
+  }
+}
+
+export function saveAccent(accent: string): void {
+  try {
+    if (accent) localStorage.setItem(ACCENT_KEY, accent);
+    else localStorage.removeItem(ACCENT_KEY);
   } catch {
     // 忽略
   }
