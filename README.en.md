@@ -107,7 +107,8 @@ npm run test:e2e         # Playwright e2e
 
 1. Create a Direct Upload project on Cloudflare Pages named `dc-wemark`.
 2. Set `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` in the GitHub repo Secrets.
-3. Push to `main` triggers [`deploy.yml`](.github/workflows/deploy.yml): build then `wrangler pages deploy`.
+3. Set repo Variable `CF_DEPLOY=true` to enable the deploy workflow.
+4. Push to `main` triggers [`deploy.yml`](.github/workflows/deploy.yml): build then `wrangler pages deploy`.
 
 > The Clipboard API requires HTTPS — Cloudflare Pages provides it, and `localhost` counts as a secure context, so copy works in both.
 

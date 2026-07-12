@@ -115,7 +115,8 @@ npm run test:e2e       # Playwright e2e（chromium + webkit）
 
 1. 在 Cloudflare Pages 建立一個 Direct Upload 專案，命名 `dc-wemark`。
 2. 在 GitHub repo Secrets 設定 `CLOUDFLARE_API_TOKEN`（具 Pages 編輯權限）與 `CLOUDFLARE_ACCOUNT_ID`。
-3. push 到 `main` 會觸發 [`deploy.yml`](.github/workflows/deploy.yml)：建置 WASM + 前端後 `wrangler pages deploy`。
+3. 在 GitHub repo Variables 設定 `CF_DEPLOY=true` 以啟用部署工作流。
+4. push 到 `main` 會觸發 [`deploy.yml`](.github/workflows/deploy.yml)：建置 WASM + 前端後 `wrangler pages deploy`。
 
 > Clipboard API 需要 HTTPS——Cloudflare Pages 自帶 HTTPS，本地 `localhost` 也算安全內容，皆可正常複製。
 

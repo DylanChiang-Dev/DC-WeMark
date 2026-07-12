@@ -13,6 +13,9 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # 未接 Cloudflare 前不執行，避免因缺 secret 而讓每次 push 都紅。
+    # 準備好後在 repo Variables 設 CF_DEPLOY=true 即啟用。
+    if: ${{ vars.CF_DEPLOY == 'true' }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
