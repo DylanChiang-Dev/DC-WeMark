@@ -20,7 +20,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-4caf50?style=for-the-badge)](LICENSE)
 [![Rust](https://img.shields.io/badge/Rust-core-ce422b?style=for-the-badge&logo=rust)](#技術架構)
 [![WebAssembly](https://img.shields.io/badge/WASM-in--browser-654ff0?style=for-the-badge&logo=webassembly&logoColor=white)](#技術架構)
-[![Status](https://img.shields.io/badge/status-early_development-9e9e9e?style=for-the-badge)](#專案狀態與路線圖)
+[![Status](https://img.shields.io/badge/status-live-4caf50?style=for-the-badge)](#專案狀態與路線圖)
 
 </div>
 
@@ -67,7 +67,7 @@ flowchart LR
 
 ## 🚀 快速開始
 
-**線上版**：託管於 Cloudflare Pages，打開即用、無需安裝（部署見下方）。
+**線上版**：[dc-wemark.pages.dev](https://dc-wemark.pages.dev)，打開即用、無需安裝。
 
 **自架（Docker，一行啟動）**：
 
@@ -113,16 +113,19 @@ npm run test:e2e       # Playwright e2e（chromium + webkit）
 
 ## ☁️ 部署到 Cloudflare Pages
 
-1. 在 Cloudflare Pages 建立一個 Direct Upload 專案，命名 `dc-wemark`。
-2. 在 GitHub repo Secrets 設定 `CLOUDFLARE_API_TOKEN`（具 Pages 編輯權限）與 `CLOUDFLARE_ACCOUNT_ID`。
-3. 在 GitHub repo Variables 設定 `CF_DEPLOY=true` 以啟用部署工作流。
-4. push 到 `main` 會觸發 [`deploy.yml`](.github/workflows/deploy.yml)：建置 WASM + 前端後 `wrangler pages deploy`。
+Cloudflare Pages 直接連接 GitHub 倉庫 `DylanChiang-Dev/DC-WeMark`：
+
+1. `main` 是正式環境分支，push 後 Cloudflare 自動拉取倉庫。
+2. 建置指令：`bash deploy/build-pages.sh`。
+3. 產物目錄：`web/dist`。
+
+建置與部署全程在 Cloudflare 執行，不需要 GitHub Secrets 或本機上傳產物。
 
 > Clipboard API 需要 HTTPS——Cloudflare Pages 自帶 HTTPS，本地 `localhost` 也算安全內容，皆可正常複製。
 
 ## 📌 專案狀態與路線圖
 
-目前版本：**1.0.0**（功能完成、自架就緒；線上版待接入 Cloudflare 帳號部署）。
+目前版本：**1.0.1**（功能完成，Cloudflare Pages 線上版與 Docker 自架均已就緒）。
 
 - [x] **0.1.0** — 排版引擎 MVP：Markdown → 公眾號相容 HTML，含 1 套預設主題
 - [x] **0.2.0** — 雙欄編輯器 + 即時預覽 + 一鍵複製

@@ -18,7 +18,7 @@ your article never leaves your device — no server, no account, no upload.
 [![License: MIT](https://img.shields.io/badge/License-MIT-4caf50?style=for-the-badge)](LICENSE)
 [![Rust](https://img.shields.io/badge/Rust-core-ce422b?style=for-the-badge&logo=rust)](#architecture)
 [![WebAssembly](https://img.shields.io/badge/WASM-in--browser-654ff0?style=for-the-badge&logo=webassembly&logoColor=white)](#architecture)
-[![Status](https://img.shields.io/badge/status-early_development-9e9e9e?style=for-the-badge)](#status--roadmap)
+[![Status](https://img.shields.io/badge/status-live-4caf50?style=for-the-badge)](#status--roadmap)
 
 </div>
 
@@ -65,7 +65,7 @@ The two middle steps are the crux: the WeChat editor **only accepts rich text wi
 
 ## 🚀 Getting Started
 
-**Hosted**: on Cloudflare Pages, zero install (deployment below).
+**Hosted**: [dc-wemark.pages.dev](https://dc-wemark.pages.dev), zero install.
 
 **Self-hosted (Docker, one line)**:
 
@@ -105,16 +105,19 @@ npm run test:e2e         # Playwright e2e
 
 ## ☁️ Deploy to Cloudflare Pages
 
-1. Create a Direct Upload project on Cloudflare Pages named `dc-wemark`.
-2. Set `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` in the GitHub repo Secrets.
-3. Set repo Variable `CF_DEPLOY=true` to enable the deploy workflow.
-4. Push to `main` triggers [`deploy.yml`](.github/workflows/deploy.yml): build then `wrangler pages deploy`.
+Cloudflare Pages is connected directly to the `DylanChiang-Dev/DC-WeMark` GitHub repository:
+
+1. `main` is the production branch; Cloudflare pulls the repository after every push.
+2. Build command: `bash deploy/build-pages.sh`.
+3. Output directory: `web/dist`.
+
+Builds and deployments run entirely on Cloudflare, with no GitHub Secrets or local artifact upload required.
 
 > The Clipboard API requires HTTPS — Cloudflare Pages provides it, and `localhost` counts as a secure context, so copy works in both.
 
 ## 📌 Status & Roadmap
 
-Current version: **1.0.0** (feature-complete, self-host ready; hosted release pending a Cloudflare account hookup).
+Current version: **1.0.1** (feature-complete, with Cloudflare Pages hosting and Docker self-hosting ready).
 
 - [x] **0.1.0** — Engine MVP: Markdown → WeChat-compatible HTML, with 1 default theme
 - [x] **0.2.0** — Split-pane editor + live preview + one-click copy
