@@ -1,0 +1,197 @@
+# 霧銀 — 冷灰留白
+# 原創設計：銀灰紙面、細線層級、沉靜藍灰點綴，適合品牌與觀點文章。
+
+[meta]
+id = "mist"
+name = "霧銀"
+description = "冷灰留白與纖細分隔，安靜精準，適合品牌、產品與觀點文章。"
+accent = "#49647a"
+
+[palette]
+text = "#252b31"
+muted = "#77828c"
+border = "#d8dde2"
+soft = "#f4f6f7"
+quote-text = "#4e5963"
+code-text = "#e9edf0"
+code-bg = "#20262d"
+inline-code-text = "#934a5a"
+
+[root]
+font-family = "-apple-system, BlinkMacSystemFont, \"Segoe UI\", \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", Arial, sans-serif"
+font-size = "16px"
+line-height = "1.82"
+color = "{{text}}"
+letter-spacing = "0.2px"
+word-break = "break-word"
+
+[elements.h1]
+font-size = "24px"
+font-weight = "700"
+color = "{{text}}"
+line-height = "1.38"
+margin = "38px 0 20px"
+padding-bottom = "12px"
+border-bottom = "1px solid {{accent}}"
+
+[elements.h2]
+font-size = "20px"
+font-weight = "700"
+color = "{{accent}}"
+line-height = "1.45"
+margin = "31px 0 15px"
+padding-bottom = "7px"
+border-bottom = "1px solid {{border}}"
+
+[elements.h3]
+font-size = "18px"
+font-weight = "600"
+color = "{{text}}"
+line-height = "1.5"
+margin = "25px 0 12px"
+
+[elements.h4]
+font-size = "16px"
+font-weight = "600"
+color = "{{accent}}"
+line-height = "1.5"
+margin = "21px 0 10px"
+letter-spacing = "0.6px"
+
+[elements.h5]
+font-size = "15px"
+font-weight = "600"
+color = "{{text}}"
+line-height = "1.5"
+margin = "17px 0 8px"
+
+[elements.h6]
+font-size = "14px"
+font-weight = "600"
+color = "{{muted}}"
+line-height = "1.5"
+margin = "15px 0 7px"
+
+[elements.p]
+margin = "17px 0"
+line-height = "1.82"
+color = "{{text}}"
+
+[elements.strong]
+font-weight = "700"
+color = "{{text}}"
+
+[elements.em]
+font-style = "italic"
+color = "{{accent}}"
+
+[elements.del]
+color = "{{muted}}"
+text-decoration = "line-through"
+
+[elements.a]
+color = "{{accent}}"
+font-weight = "500"
+text-decoration = "none"
+border-bottom = "1px solid {{accent}}"
+
+[elements.blockquote]
+margin = "20px 0"
+padding = "13px 16px"
+color = "{{quote-text}}"
+background = "{{soft}}"
+border-left = "2px solid {{accent}}"
+
+[elements.ul]
+margin = "17px 0"
+padding-left = "1.35em"
+
+[elements.ol]
+margin = "17px 0"
+padding-left = "1.35em"
+
+[elements.li]
+margin = "7px 0"
+line-height = "1.8"
+color = "{{text}}"
+
+[elements.hr]
+height = "1px"
+border = "none"
+background = "{{border}}"
+margin = "32px 0"
+
+[elements.img]
+display = "block"
+max-width = "100%"
+height = "auto"
+margin = "21px auto"
+border-radius = "4px"
+
+[elements.code-inline]
+font-family = "\"SFMono-Regular\", Consolas, Menlo, monospace"
+font-size = "90%"
+color = "{{inline-code-text}}"
+background = "{{soft}}"
+padding = "2px 6px"
+border-radius = "3px"
+
+[elements.table]
+width = "100%"
+border-collapse = "collapse"
+margin = "20px 0"
+font-size = "15px"
+
+[elements.th]
+padding = "9px 12px"
+font-weight = "600"
+color = "{{text}}"
+background = "{{soft}}"
+border-top = "1px solid {{accent}}"
+border-bottom = "1px solid {{border}}"
+
+[elements.td]
+padding = "9px 12px"
+color = "{{text}}"
+border-bottom = "1px solid {{border}}"
+
+[elements.footnote-sup]
+color = "{{accent}}"
+font-size = "12px"
+font-weight = "600"
+padding = "0 2px"
+
+[elements.footnote-section]
+margin = "34px 0 0"
+padding-top = "16px"
+border-top = "1px solid {{border}}"
+font-size = "14px"
+color = "{{muted}}"
+
+[elements.footnote-title]
+margin = "0 0 8px"
+font-size = "15px"
+font-weight = "600"
+color = "{{text}}"
+
+[elements.footnote-item]
+margin = "4px 0"
+line-height = "1.65"
+word-break = "break-all"
+color = "{{muted}}"
+
+[code]
+theme = "base16-ocean.dark"
+
+[code.block]
+font-family = "\"SFMono-Regular\", Consolas, Menlo, monospace"
+font-size = "14px"
+line-height = "1.65"
+color = "{{code-text}}"
+background = "{{code-bg}}"
+padding = "16px"
+margin = "20px 0"
+border-radius = "5px"
+border = "1px solid #313943"
+overflow-x = "auto"
+white-space = "pre"

@@ -89,8 +89,24 @@ test('settings expose 48 original theme presets', async ({ page }) => {
   await expect(panel).toBeVisible();
   await expect(panel.locator('#themeTotal')).toHaveText('48');
   await expect(panel.locator('.theme-option')).toHaveCount(6);
-  await expect(panel.getByRole('button', { name: /霧銀/ })).toBeVisible();
-  await expect(panel.getByRole('button', { name: /躍藍/ })).toBeVisible();
+  const mist = panel.getByRole('button', { name: /霧銀/ });
+  const pulse = panel.getByRole('button', { name: /躍藍/ });
+  await expect(mist).toBeVisible();
+  await expect(pulse).toBeVisible();
+
+  await pulse.click();
+  await expect(panel.locator('#currentThemeName')).toHaveText('躍藍');
+  await expect(page.locator('#preview h1')).toHaveAttribute(
+    'style',
+    /border-left:5px solid #1673d1/i,
+  );
+
+  await mist.click();
+  await expect(panel.locator('#currentThemeName')).toHaveText('霧銀');
+  await expect(page.locator('#preview h1')).toHaveAttribute(
+    'style',
+    /border-bottom:1px solid #49647a/i,
+  );
 
   await panel.getByRole('tab', { name: /精選/ }).click();
   await expect(panel.locator('.theme-option')).toHaveCount(10);

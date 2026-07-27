@@ -20,10 +20,10 @@ const native: ThemePreset[] = [
   },
   {
     id: 'product-blue',
-    name: '產品藍',
-    description: '俐落清晰，適合產品更新與功能說明。',
-    accent: '#2563eb',
-    engineTheme: 'pine',
+    name: '躍藍',
+    description: '亮藍、薄荷青與珊瑚紅交錯，適合產品與效率內容。',
+    accent: '#1673d1',
+    engineTheme: 'pulse',
     group: 'native',
   },
   {
@@ -52,10 +52,10 @@ const native: ThemePreset[] = [
   },
   {
     id: 'monochrome',
-    name: '黑白',
-    description: '低干擾、高對比，適合技術與觀點內容。',
-    accent: '#111111',
-    engineTheme: 'mono',
+    name: '霧銀',
+    description: '冷灰留白與纖細分隔，適合品牌與觀點文章。',
+    accent: '#49647a',
+    engineTheme: 'mist',
     group: 'native',
   },
 ];

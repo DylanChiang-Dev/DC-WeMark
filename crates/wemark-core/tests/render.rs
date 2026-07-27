@@ -278,7 +278,10 @@ fn original_cool_themes_have_distinct_complete_palettes() {
         .unwrap_or_else(|_| panic!("theme {theme_id} failed to render"))
         .html;
 
-        assert!(html.contains(accent), "{theme_id} should use its own accent");
+        assert!(
+            html.contains(accent),
+            "{theme_id} should use its own accent"
+        );
         assert!(
             html.contains(signature),
             "{theme_id} should expose its own visual signature: {html}"
