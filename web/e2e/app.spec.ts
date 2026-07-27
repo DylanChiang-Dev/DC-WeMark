@@ -1,4 +1,17 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
+
+async function readClipboardHtml(page: Page): Promise<string> {
+  return page.evaluate(async () => {
+    const items = await navigator.clipboard.read();
+    for (const item of items) {
+      if (item.types.includes('text/html')) {
+        const blob = await item.getType('text/html');
+        return await blob.text();
+      }
+    }
+    return '';
+  });
+}
 
 test('loads and renders the sample article in the preview', async ({ page }) => {
   await page.goto('/');
@@ -45,6 +58,22 @@ test('all themes render a square-paper article background', async ({ page }) => 
   await expect(page.locator('#editor')).toHaveCSS('background-image', 'none');
 });
 
+test('square-paper background can be disabled and persists', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });
+
+  const toggle = page.getByRole('switch', { name: '方格紙背景' });
+  const article = page.locator('#preview > section');
+  await expect(toggle).toBeChecked();
+  await toggle.uncheck();
+  await expect(article).toHaveCSS('background-image', 'none');
+
+  await page.reload();
+  await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });
+  await expect(toggle).not.toBeChecked();
+  await expect(article).toHaveCSS('background-image', 'none');
+});
+
 test('word count reflects editor content', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });
@@ -84,16 +113,7 @@ test('copy writes text/html to the clipboard', async ({ page, context, browserNa
   await page.locator('#copyBtn').click();
   await expect(page.locator('#toast')).toHaveClass(/is-show/);
 
-  const html = await page.evaluate(async () => {
-    const items = await navigator.clipboard.read();
-    for (const item of items) {
-      if (item.types.includes('text/html')) {
-        const blob = await item.getType('text/html');
-        return await blob.text();
-      }
-    }
-    return '';
-  });
+  const html = await readClipboardHtml(page);
   expect(html).toContain('<section');
   expect(html).toContain('複製測試');
   expect(html).toContain('background-image:linear-gradient');
@@ -103,4 +123,10 @@ test('copy writes text/html to the clipboard', async ({ page, context, browserNa
   // 產生像 `ui"=""` 這種殘骸（貼進公眾號會失真）。
   expect(html).not.toMatch(/="">/);
   expect(html).not.toContain('font-family:"');
+
+  await page.getByRole('switch', { name: '方格紙背景' }).uncheck();
+  await page.locator('#copyBtn').click();
+  const plainHtml = await readClipboardHtml(page);
+  expect(plainHtml).not.toContain('background-image:');
+  expect(plainHtml).not.toContain('background-size:');
 });

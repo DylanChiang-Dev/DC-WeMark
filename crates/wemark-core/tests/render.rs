@@ -50,6 +50,26 @@ fn every_theme_renders_square_paper_background() {
 }
 
 #[test]
+fn square_paper_background_can_be_disabled() {
+    let html = render(
+        "純色內文",
+        "default",
+        &RenderOptions {
+            grid_background: false,
+            ..RenderOptions::default()
+        },
+    )
+    .expect("default theme renders without grid")
+    .html;
+    let root_tag = html.split_once('>').expect("root tag closes").0;
+
+    assert!(root_tag.contains("background-color:#fff;"));
+    assert!(root_tag.contains("padding:24px 20px;"));
+    assert!(!root_tag.contains("background-image:"));
+    assert!(!root_tag.contains("background-size:"));
+}
+
+#[test]
 fn output_has_no_forbidden_constructs() {
     let md = "# T\n\n\
               普通段落與 `行內碼`。\n\n\
