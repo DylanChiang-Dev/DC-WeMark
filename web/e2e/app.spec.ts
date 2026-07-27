@@ -89,6 +89,7 @@ test('settings expose 48 original theme presets', async ({ page }) => {
   await expect(panel).toBeVisible();
   await expect(panel.locator('#themeTotal')).toHaveText('48');
   await expect(panel.locator('.theme-option')).toHaveCount(6);
+  await expect(panel.locator('.theme-option__palette > span')).toHaveCount(18);
   const mist = panel.getByRole('button', { name: /霧銀/ });
   const pulse = panel.getByRole('button', { name: /躍藍/ });
   await expect(mist).toBeVisible();
@@ -136,6 +137,39 @@ test('font size and scroll sync preferences persist', async ({ page }) => {
   await expect(page.locator('#preview > section')).toHaveCSS('font-size', '14px');
   await page.getByRole('button', { name: '排版設定' }).click();
   await expect(page.getByRole('switch', { name: '雙向捲動同步' })).not.toBeChecked();
+});
+
+test('font and named accent choices are visual and persist', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });
+  await page.getByRole('button', { name: '排版設定' }).click();
+
+  const fontFamily = page.getByRole('group', { name: '文章字體' });
+  await fontFamily.getByRole('button', { name: '刊物宋體' }).click();
+  await expect(page.locator('#preview > section')).toHaveAttribute(
+    'style',
+    /font-family:Georgia,Songti SC/,
+  );
+
+  const accentPresets = page.getByRole('group', { name: '強調色' });
+  await accentPresets.getByRole('button', { name: '躍藍' }).click();
+  await expect(page.locator('#preview h2').first()).toHaveAttribute('style', /#1673d1/i);
+
+  await page.reload();
+  await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('#preview > section')).toHaveAttribute(
+    'style',
+    /font-family:Georgia,Songti SC/,
+  );
+  await page.getByRole('button', { name: '排版設定' }).click();
+  await expect(fontFamily.getByRole('button', { name: '刊物宋體' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await expect(accentPresets.getByRole('button', { name: '躍藍' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
 });
 
 test('scroll sync follows in both directions', async ({ page }) => {

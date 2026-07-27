@@ -1,4 +1,4 @@
-use wemark_core::{render, BackgroundStyle, FontSize, RenderOptions};
+use wemark_core::{render, BackgroundStyle, FontFamily, FontSize, RenderOptions};
 
 fn r(md: &str) -> String {
     render(md, "default", &RenderOptions::default())
@@ -113,6 +113,26 @@ fn font_size_scales_body_and_headings() {
         assert!(root_tag.contains(body_size), "{root_tag}");
         assert!(heading_tag.contains(heading_size), "{heading_tag}");
     }
+}
+
+#[test]
+fn font_family_override_is_inlined_on_the_article_root() {
+    let html = render(
+        "# 字體測試",
+        "default",
+        &RenderOptions {
+            font_family: FontFamily::Serif,
+            ..RenderOptions::default()
+        },
+    )
+    .expect("default theme renders")
+    .html;
+    let root_tag = html.split_once('>').expect("root tag closes").0;
+
+    assert!(
+        root_tag.contains("font-family:Georgia,Songti SC"),
+        "{root_tag}"
+    );
 }
 
 #[test]
