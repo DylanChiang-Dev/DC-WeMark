@@ -89,6 +89,8 @@ test('settings expose 48 original theme presets', async ({ page }) => {
   await expect(panel).toBeVisible();
   await expect(panel.locator('#themeTotal')).toHaveText('48');
   await expect(panel.locator('.theme-option')).toHaveCount(6);
+  await expect(panel.getByRole('button', { name: /霧銀/ })).toBeVisible();
+  await expect(panel.getByRole('button', { name: /躍藍/ })).toBeVisible();
 
   await panel.getByRole('tab', { name: /精選/ }).click();
   await expect(panel.locator('.theme-option')).toHaveCount(10);

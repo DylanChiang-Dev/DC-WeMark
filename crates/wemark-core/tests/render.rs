@@ -263,6 +263,30 @@ fn themes_list_contains_default() {
 }
 
 #[test]
+fn original_cool_themes_have_distinct_complete_palettes() {
+    let cases = [
+        ("mist", "#49647a", "border-bottom:1px solid #49647a"),
+        ("pulse", "#1673d1", "background:#e9f7f7"),
+    ];
+
+    for (theme_id, accent, signature) in cases {
+        let html = render(
+            "# 一級標題\n\n## 二級標題\n\n> 引用\n\n**重點**",
+            theme_id,
+            &RenderOptions::default(),
+        )
+        .unwrap_or_else(|_| panic!("theme {theme_id} failed to render"))
+        .html;
+
+        assert!(html.contains(accent), "{theme_id} should use its own accent");
+        assert!(
+            html.contains(signature),
+            "{theme_id} should expose its own visual signature: {html}"
+        );
+    }
+}
+
+#[test]
 fn every_theme_styles_standard_markdown_elements() {
     let required = [
         "h1",
