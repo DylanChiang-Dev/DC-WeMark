@@ -1,12 +1,13 @@
 // localStorage 草稿與偏好（全本地，符合隱私承諾）。
 
-import type { BackgroundStyle, FontSize } from './engine.js';
+import type { BackgroundStyle, FontFamily, FontSize } from './engine.js';
 
 const DRAFT_KEY = 'wemark:draft:v1';
 const THEME_KEY = 'wemark:theme:v1';
 const ACCENT_KEY = 'wemark:accent:v1';
 const BACKGROUND_KEY = 'wemark:background:v1';
 const FONT_SIZE_KEY = 'wemark:font-size:v1';
+const FONT_FAMILY_KEY = 'wemark:font-family:v1';
 const SCROLL_SYNC_KEY = 'wemark:scroll-sync:v1';
 
 export function loadDraft(): string | null {
@@ -96,6 +97,23 @@ export function loadFontSize(): FontSize {
 export function saveFontSize(fontSize: FontSize): void {
   try {
     localStorage.setItem(FONT_SIZE_KEY, fontSize);
+  } catch {
+    // 忽略（隱私模式 / 配額）
+  }
+}
+
+export function loadFontFamily(): FontFamily {
+  try {
+    const value = localStorage.getItem(FONT_FAMILY_KEY);
+    return value === 'sans' || value === 'serif' || value === 'kai' ? value : 'theme';
+  } catch {
+    return 'theme';
+  }
+}
+
+export function saveFontFamily(fontFamily: FontFamily): void {
+  try {
+    localStorage.setItem(FONT_FAMILY_KEY, fontFamily);
   } catch {
     // 忽略（隱私模式 / 配額）
   }

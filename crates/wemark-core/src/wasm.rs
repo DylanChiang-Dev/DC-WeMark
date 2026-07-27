@@ -14,6 +14,7 @@ pub fn wm_render(
     accent: &str,
     background: &str,
     font_size: &str,
+    font_family: &str,
 ) -> String {
     let opts = RenderOptions {
         external_links_as_footnotes: external_footnotes,
@@ -24,6 +25,7 @@ pub fn wm_render(
         },
         background: crate::BackgroundStyle::from(background),
         font_size: crate::FontSize::from(font_size),
+        font_family: crate::FontFamily::from(font_family),
     };
     match crate::render(markdown, theme_id, &opts) {
         Ok(r) => format!(

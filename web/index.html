@@ -23,9 +23,6 @@
 
         <div class="toolbar">
           <div class="themes" id="themes" role="tablist" aria-label="主題"></div>
-          <label class="accent" title="自訂強調色">
-            <input type="color" id="accent" aria-label="自訂強調色" />
-          </label>
           <select class="select select--compact" id="backgroundQuick" aria-label="複製背景">
             <option value="warm">暖米紙</option>
             <option value="grid">方格紙</option>
@@ -118,6 +115,16 @@
           <div class="theme-gallery" id="themeGallery"></div>
         </section>
 
+        <section class="settings-section" aria-labelledby="colorSettingsTitle">
+          <div class="settings-section__heading">
+            <div>
+              <h3 id="colorSettingsTitle">強調色</h3>
+              <p>標題、連結與重點標記的主色。</p>
+            </div>
+          </div>
+          <div class="accent-options" id="accentOptions" role="group" aria-label="強調色"></div>
+        </section>
+
         <section class="settings-section" aria-labelledby="editingSettingsTitle">
           <div class="settings-section__heading">
             <div>
@@ -146,6 +153,19 @@
               <button type="button" data-font-size="small" aria-label="小">小 <small>14</small></button>
               <button type="button" data-font-size="medium" aria-label="中">中 <small>15</small></button>
               <button type="button" data-font-size="large" aria-label="大">大 <small>16</small></button>
+            </div>
+          </div>
+
+          <div class="setting-block setting-block--stack">
+            <div class="setting-block__label">
+              <strong>文章字體</strong>
+              <small>正文與標題</small>
+            </div>
+            <div class="font-family-options" id="fontFamilyGroup" role="group" aria-label="文章字體">
+              <button type="button" data-font-family="theme">跟隨主題</button>
+              <button type="button" data-font-family="sans">清晰黑體</button>
+              <button type="button" data-font-family="serif">刊物宋體</button>
+              <button type="button" data-font-family="kai">人文楷體</button>
             </div>
           </div>
         </section>

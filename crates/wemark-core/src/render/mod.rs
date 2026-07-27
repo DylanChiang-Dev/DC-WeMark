@@ -20,6 +20,7 @@ pub struct Writer {
     accent: String,
     background: crate::BackgroundStyle,
     font_delta_px: i16,
+    font_family: crate::FontFamily,
     external_footnotes: bool,
     out: String,
     footnotes: Vec<(String, String)>,
@@ -41,6 +42,7 @@ impl Writer {
             accent,
             background: opts.background,
             font_delta_px: opts.font_size.delta_px(),
+            font_family: opts.font_family,
             external_footnotes: opts.external_links_as_footnotes,
             out: String::new(),
             footnotes: Vec::new(),
@@ -66,7 +68,10 @@ impl Writer {
         if self.external_footnotes && !self.footnotes.is_empty() {
             self.render_references();
         }
-        let st = style::inject(self.render_style(self.theme.root), ARTICLE_BASE_STYLE);
+        let mut st = style::inject(self.render_style(self.theme.root), ARTICLE_BASE_STYLE);
+        if let Some(font_family) = self.font_family.css() {
+            st = style::inject(st, &format!("font-family:{font_family};"));
+        }
         let st = style::inject(st, self.background.css());
         format!("<section{st}>{}</section>", std::mem::take(&mut self.out))
     }

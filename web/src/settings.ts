@@ -1,4 +1,4 @@
-import type { BackgroundStyle, FontSize } from './engine.js';
+import type { BackgroundStyle, FontFamily, FontSize } from './engine.js';
 import {
   getThemePreset,
   THEME_PRESETS,
@@ -9,24 +9,41 @@ import {
 
 interface SettingsState {
   themeId: string;
+  accent: string;
   background: BackgroundStyle;
   fontSize: FontSize;
+  fontFamily: FontFamily;
   scrollSync: boolean;
 }
 
 interface SettingsHandlers {
   onTheme(theme: ThemePreset): void;
+  onAccent(accent: string): void;
   onBackground(background: BackgroundStyle): void;
   onFontSize(fontSize: FontSize): void;
+  onFontFamily(fontFamily: FontFamily): void;
   onScrollSync(enabled: boolean): void;
 }
 
 export interface SettingsController {
   setTheme(themeId: string): void;
+  setAccent(accent: string): void;
   setBackground(background: BackgroundStyle): void;
   setFontSize(fontSize: FontSize): void;
+  setFontFamily(fontFamily: FontFamily): void;
   setScrollSync(enabled: boolean): void;
 }
+
+const ACCENT_PRESETS = [
+  { name: '主題色', value: '' },
+  { name: '霧銀', value: '#49647a' },
+  { name: '躍藍', value: '#1673d1' },
+  { name: '墨黑', value: '#20242b' },
+  { name: '松青', value: '#0f766e' },
+  { name: '珊瑚', value: '#c2414d' },
+  { name: '琥珀', value: '#9a5a12' },
+  { name: '葡萄', value: '#6f4a91' },
+] as const;
 
 const byId = <T extends HTMLElement>(id: string): T => {
   const element = document.getElementById(id);
@@ -45,8 +62,10 @@ export function createSettingsPanel(
   const currentDescription = byId<HTMLElement>('currentThemeDescription');
   const currentSwatch = byId<HTMLElement>('currentThemeSwatch');
   const themeTotal = byId<HTMLElement>('themeTotal');
+  const accentOptions = byId<HTMLElement>('accentOptions');
   const scrollSync = byId<HTMLInputElement>('scrollSync');
-  const fontGroup = byId<HTMLElement>('fontSizeGroup');
+  const fontSizeGroup = byId<HTMLElement>('fontSizeGroup');
+  const fontFamilyGroup = byId<HTMLElement>('fontFamilyGroup');
   let activeGroup: ThemeGroup = 'native';
   let state = { ...initial };
 
@@ -70,7 +89,12 @@ export function createSettingsPanel(
     const preset = getThemePreset(state.themeId);
     currentName.textContent = preset.name;
     currentDescription.textContent = preset.description;
-    currentSwatch.style.background = preset.accent;
+    currentSwatch.replaceChildren();
+    for (const color of preset.palette) {
+      const swatch = document.createElement('span');
+      swatch.style.background = color;
+      currentSwatch.append(swatch);
+    }
   };
 
   const renderGallery = () => {
@@ -83,9 +107,14 @@ export function createSettingsPanel(
       option.classList.toggle('is-active', preset.id === state.themeId);
       option.setAttribute('aria-pressed', String(preset.id === state.themeId));
 
-      const swatch = document.createElement('span');
-      swatch.className = 'theme-option__swatch';
-      swatch.style.background = preset.accent;
+      const palette = document.createElement('span');
+      palette.className = 'theme-option__palette';
+      palette.setAttribute('aria-hidden', 'true');
+      for (const color of preset.palette) {
+        const swatch = document.createElement('span');
+        swatch.style.background = color;
+        palette.append(swatch);
+      }
 
       const copy = document.createElement('span');
       copy.className = 'theme-option__copy';
@@ -95,7 +124,7 @@ export function createSettingsPanel(
       description.textContent = preset.description;
       copy.append(name, description);
 
-      option.append(swatch, copy);
+      option.append(palette, copy);
       option.addEventListener('click', () => {
         state.themeId = preset.id;
         renderCurrentTheme();
@@ -104,6 +133,60 @@ export function createSettingsPanel(
       });
       gallery.append(option);
     }
+  };
+
+  const renderAccentOptions = () => {
+    accentOptions.replaceChildren();
+    const theme = getThemePreset(state.themeId);
+    const isNamedAccent = ACCENT_PRESETS.some(
+      (preset) => preset.value !== '' && preset.value === state.accent,
+    );
+
+    for (const preset of ACCENT_PRESETS) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'accent-option';
+      button.dataset.accent = preset.value;
+      button.setAttribute('aria-label', preset.name);
+      const selected = state.accent === preset.value;
+      button.classList.toggle('is-active', selected);
+      button.setAttribute('aria-pressed', String(selected));
+
+      const swatch = document.createElement('span');
+      swatch.className = 'accent-option__swatch';
+      swatch.style.background = preset.value || theme.accent;
+      const name = document.createElement('strong');
+      name.textContent = preset.name;
+      button.append(swatch, name);
+      button.addEventListener('click', () => {
+        state.accent = preset.value;
+        renderAccentOptions();
+        handlers.onAccent(state.accent);
+      });
+      accentOptions.append(button);
+    }
+
+    const custom = document.createElement('label');
+    custom.className = 'accent-option accent-option--custom';
+    custom.classList.toggle('is-active', state.accent !== '' && !isNamedAccent);
+    const input = document.createElement('input');
+    input.id = 'accent';
+    input.type = 'color';
+    input.value = state.accent || theme.accent;
+    input.setAttribute('aria-label', '自訂強調色');
+    const name = document.createElement('strong');
+    name.textContent = '自訂';
+    custom.append(input, name);
+    input.addEventListener('input', () => {
+      state.accent = input.value;
+      for (const option of accentOptions.querySelectorAll<HTMLElement>('[data-accent]')) {
+        option.classList.remove('is-active');
+        option.setAttribute('aria-pressed', 'false');
+      }
+      custom.classList.add('is-active');
+      handlers.onAccent(state.accent);
+    });
+    accentOptions.append(custom);
   };
 
   for (const tab of panel.querySelectorAll<HTMLButtonElement>('[data-theme-group]')) {
@@ -126,11 +209,21 @@ export function createSettingsPanel(
     });
   }
 
-  for (const button of fontGroup.querySelectorAll<HTMLButtonElement>('[data-font-size]')) {
+  for (const button of fontSizeGroup.querySelectorAll<HTMLButtonElement>('[data-font-size]')) {
     button.addEventListener('click', () => {
       state.fontSize = button.dataset.fontSize as FontSize;
       syncFontSize();
       handlers.onFontSize(state.fontSize);
+    });
+  }
+
+  for (const button of fontFamilyGroup.querySelectorAll<HTMLButtonElement>(
+    '[data-font-family]',
+  )) {
+    button.addEventListener('click', () => {
+      state.fontFamily = button.dataset.fontFamily as FontFamily;
+      syncFontFamily();
+      handlers.onFontFamily(state.fontFamily);
     });
   }
 
@@ -155,8 +248,18 @@ export function createSettingsPanel(
   };
 
   const syncFontSize = () => {
-    for (const button of fontGroup.querySelectorAll<HTMLButtonElement>('[data-font-size]')) {
+    for (const button of fontSizeGroup.querySelectorAll<HTMLButtonElement>('[data-font-size]')) {
       const selected = button.dataset.fontSize === state.fontSize;
+      button.classList.toggle('is-active', selected);
+      button.setAttribute('aria-pressed', String(selected));
+    }
+  };
+
+  const syncFontFamily = () => {
+    for (const button of fontFamilyGroup.querySelectorAll<HTMLButtonElement>(
+      '[data-font-family]',
+    )) {
+      const selected = button.dataset.fontFamily === state.fontFamily;
       button.classList.toggle('is-active', selected);
       button.setAttribute('aria-pressed', String(selected));
     }
@@ -164,9 +267,11 @@ export function createSettingsPanel(
 
   renderCurrentTheme();
   renderGallery();
+  renderAccentOptions();
   themeTotal.textContent = String(THEME_PRESETS.length);
   syncBackground();
   syncFontSize();
+  syncFontFamily();
   scrollSync.checked = state.scrollSync;
 
   return {
@@ -174,6 +279,11 @@ export function createSettingsPanel(
       state.themeId = themeId;
       renderCurrentTheme();
       renderGallery();
+      renderAccentOptions();
+    },
+    setAccent(accent) {
+      state.accent = accent;
+      renderAccentOptions();
     },
     setBackground(background) {
       state.background = background;
@@ -182,6 +292,10 @@ export function createSettingsPanel(
     setFontSize(fontSize) {
       state.fontSize = fontSize;
       syncFontSize();
+    },
+    setFontFamily(fontFamily) {
+      state.fontFamily = fontFamily;
+      syncFontFamily();
     },
     setScrollSync(enabled) {
       state.scrollSync = enabled;

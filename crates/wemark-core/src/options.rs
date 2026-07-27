@@ -56,6 +56,41 @@ impl FontSize {
     }
 }
 
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum FontFamily {
+    #[default]
+    Theme,
+    Sans,
+    Serif,
+    Kai,
+}
+
+impl From<&str> for FontFamily {
+    fn from(value: &str) -> Self {
+        match value {
+            "sans" => Self::Sans,
+            "serif" => Self::Serif,
+            "kai" => Self::Kai,
+            _ => Self::Theme,
+        }
+    }
+}
+
+impl FontFamily {
+    pub(crate) fn css(self) -> Option<&'static str> {
+        match self {
+            Self::Theme => None,
+            Self::Sans => Some(
+                "-apple-system,BlinkMacSystemFont,Segoe UI,PingFang SC,Hiragino Sans GB,Microsoft YaHei,Arial,sans-serif",
+            ),
+            Self::Serif => {
+                Some("Georgia,Songti SC,STSong,SimSun,Noto Serif CJK SC,serif")
+            }
+            Self::Kai => Some("Kaiti SC,STKaiti,KaiTi,Noto Serif CJK SC,serif"),
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct RenderOptions {
     /// 外部連結（非 mp.weixin.qq.com）是否轉為文末腳註。
@@ -66,6 +101,8 @@ pub struct RenderOptions {
     pub background: BackgroundStyle,
     /// 文章整體字級。
     pub font_size: FontSize,
+    /// 文章字體；Theme 表示沿用主題設定。
+    pub font_family: FontFamily,
 }
 
 impl Default for RenderOptions {
@@ -75,6 +112,7 @@ impl Default for RenderOptions {
             accent: None,
             background: BackgroundStyle::default(),
             font_size: FontSize::default(),
+            font_family: FontFamily::default(),
         }
     }
 }

@@ -5,8 +5,25 @@ export interface ThemePreset {
   name: string;
   description: string;
   accent: string;
+  palette: readonly [string, string, string];
   engineTheme: string;
   group: ThemeGroup;
+}
+
+const engineNeutrals: Record<string, readonly [string, string]> = {
+  default: ['#f7f8fc', '#2f3640'],
+  magazine: ['#faf6f0', '#2b2622'],
+  mono: ['#f5f5f5', '#1a1a1a'],
+  pine: ['#e0f2ef', '#1f2933'],
+  warm: ['#fff4e8', '#4a372c'],
+};
+
+function paletteFor(
+  engineTheme: string,
+  accent: string,
+): readonly [string, string, string] {
+  const [soft, text] = engineNeutrals[engineTheme] ?? engineNeutrals.default;
+  return [accent, soft, text];
 }
 
 const native: ThemePreset[] = [
@@ -15,6 +32,7 @@ const native: ThemePreset[] = [
     name: '簡明',
     description: '清楚穩定，適合從第一篇文章直接開始。',
     accent: '#4c5bd4',
+    palette: ['#4c5bd4', '#f7f8fc', '#2f3640'],
     engineTheme: 'default',
     group: 'native',
   },
@@ -23,6 +41,7 @@ const native: ThemePreset[] = [
     name: '躍藍',
     description: '亮藍、薄荷青與珊瑚紅交錯，適合產品與效率內容。',
     accent: '#1673d1',
+    palette: ['#1673d1', '#2aa6a1', '#c2414d'],
     engineTheme: 'pulse',
     group: 'native',
   },
@@ -31,6 +50,7 @@ const native: ThemePreset[] = [
     name: '刊物',
     description: '有編輯感的層次，適合專題與深度文章。',
     accent: '#a4343a',
+    palette: ['#a4343a', '#faf6f0', '#2b2622'],
     engineTheme: 'magazine',
     group: 'native',
   },
@@ -39,6 +59,7 @@ const native: ThemePreset[] = [
     name: '手帳',
     description: '溫暖親切，適合生活記錄與經驗分享。',
     accent: '#e0743c',
+    palette: ['#e0743c', '#f5cf91', '#4a372c'],
     engineTheme: 'warm',
     group: 'native',
   },
@@ -47,6 +68,7 @@ const native: ThemePreset[] = [
     name: '松林',
     description: '安靜自然，適合知識整理與長文閱讀。',
     accent: '#0d9488',
+    palette: ['#0d9488', '#d8eee9', '#1f2933'],
     engineTheme: 'pine',
     group: 'native',
   },
@@ -55,6 +77,7 @@ const native: ThemePreset[] = [
     name: '霧銀',
     description: '冷灰留白與纖細分隔，適合品牌與觀點文章。',
     accent: '#49647a',
+    palette: ['#49647a', '#d8dde2', '#252b31'],
     engineTheme: 'mist',
     group: 'native',
   },
@@ -77,6 +100,7 @@ const featured: ThemePreset[] = [
     name,
     description,
     accent,
+    palette: paletteFor(engineTheme, accent),
     engineTheme,
     group: 'featured',
   }),
@@ -108,6 +132,7 @@ const templates: ThemePreset[] = families.flatMap(
         name: `${familyName}${colorName}`,
         description,
         accent,
+        palette: paletteFor(engineTheme, accent),
         engineTheme,
         group: 'template',
       }),

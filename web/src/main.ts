@@ -7,6 +7,7 @@ import {
   listThemes,
   render,
   type BackgroundStyle,
+  type FontFamily,
   type FontSize,
   type RenderOptions,
 } from './engine.js';
@@ -24,11 +25,13 @@ import {
   loadAccent,
   loadBackground,
   loadDraft,
+  loadFontFamily,
   loadFontSize,
   loadScrollSync,
   loadTheme,
   saveAccent,
   saveBackground,
+  saveFontFamily,
   saveFontSize,
   saveScrollSync,
   saveTheme,
@@ -55,6 +58,7 @@ let currentPreset = getThemePreset(loadTheme());
 let currentAccent = loadAccent(); // 空 = 用主題預設
 let currentBackground = loadBackground();
 let currentFontSize = loadFontSize();
+let currentFontFamily = loadFontFamily();
 let scrollSyncEnabled = loadScrollSync();
 let lastHtml = '';
 let settingsController: SettingsController | undefined;
@@ -69,6 +73,7 @@ function renderPreview(): void {
     accent: currentAccent || currentPreset.accent,
     background: currentBackground,
     fontSize: currentFontSize,
+    fontFamily: currentFontFamily,
   };
   try {
     const result = render(md, currentPreset.engineTheme, opts);
@@ -224,16 +229,6 @@ async function boot(): Promise<void> {
     currentPreset = getThemePreset(null);
   }
 
-  const accentInput = $<HTMLInputElement>('accent');
-  const syncAccentSwatch = () => {
-    accentInput.value = currentAccent || currentPreset.accent;
-  };
-  accentInput.addEventListener('input', () => {
-    currentAccent = accentInput.value;
-    saveAccent(currentAccent);
-    renderPreview();
-  });
-
   const renderQuickThemes = () => {
     renderThemeSwitcher(themesEl, QUICK_THEME_PRESETS, currentPreset.id, (id) => {
       selectTheme(getThemePreset(id));
@@ -245,9 +240,15 @@ async function boot(): Promise<void> {
     currentAccent = ''; // 切換主題時重置為主題預設強調色
     saveAccent('');
     saveTheme(preset.id);
-    syncAccentSwatch();
     renderQuickThemes();
     settingsController?.setTheme(preset.id);
+    settingsController?.setAccent('');
+    renderPreview();
+  };
+
+  const setAccent = (accent: string) => {
+    currentAccent = accent;
+    saveAccent(accent);
     renderPreview();
   };
 
@@ -266,6 +267,13 @@ async function boot(): Promise<void> {
     renderPreview();
   };
 
+  const setFontFamily = (fontFamily: FontFamily) => {
+    currentFontFamily = fontFamily;
+    saveFontFamily(fontFamily);
+    settingsController?.setFontFamily(fontFamily);
+    renderPreview();
+  };
+
   const backgroundQuick = $<HTMLSelectElement>('backgroundQuick');
   backgroundQuick.value = currentBackground;
   backgroundQuick.addEventListener('change', () => {
@@ -277,12 +285,16 @@ async function boot(): Promise<void> {
       themeId: currentPreset.id,
       background: currentBackground,
       fontSize: currentFontSize,
+      fontFamily: currentFontFamily,
+      accent: currentAccent,
       scrollSync: scrollSyncEnabled,
     },
     {
       onTheme: selectTheme,
+      onAccent: setAccent,
       onBackground: setBackground,
       onFontSize: setFontSize,
+      onFontFamily: setFontFamily,
       onScrollSync(enabled) {
         scrollSyncEnabled = enabled;
         saveScrollSync(enabled);
@@ -291,7 +303,6 @@ async function boot(): Promise<void> {
   );
 
   renderQuickThemes();
-  syncAccentSwatch();
   renderPreview();
   editor.focus();
 

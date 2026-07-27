@@ -140,28 +140,6 @@ body {
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
 }
 
-/* ---------- Accent swatch ---------- */
-.accent {
-  display: inline-flex;
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  overflow: hidden;
-  border: 1px solid var(--line);
-  cursor: pointer;
-  box-shadow: var(--shadow-sm);
-}
-
-.accent input[type='color'] {
-  width: 150%;
-  height: 150%;
-  margin: -25%;
-  border: none;
-  padding: 0;
-  background: none;
-  cursor: pointer;
-}
-
 /* ---------- Width toggle ---------- */
 .widthtoggle {
   display: flex;
@@ -485,8 +463,15 @@ body {
 .current-theme__swatch {
   width: 30px;
   height: 30px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  overflow: hidden;
   border-radius: 7px;
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.current-theme__swatch span {
+  min-width: 0;
 }
 
 .current-theme div {
@@ -541,7 +526,7 @@ body {
   width: 100%;
   min-height: 58px;
   display: grid;
-  grid-template-columns: 26px 1fr;
+  grid-template-columns: 38px 1fr;
   gap: 11px;
   align-items: center;
   padding: 9px 11px;
@@ -563,11 +548,18 @@ body {
   border-color: var(--accent);
 }
 
-.theme-option__swatch {
-  width: 26px;
+.theme-option__palette {
+  width: 38px;
   height: 26px;
-  border-radius: 50%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  overflow: hidden;
+  border-radius: 6px;
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.09);
+}
+
+.theme-option__palette span {
+  min-width: 0;
 }
 
 .theme-option__copy {
@@ -601,6 +593,11 @@ body {
   min-height: 54px;
   padding: 10px 0;
   border-top: 1px solid var(--line);
+}
+
+.setting-block--stack {
+  display: grid;
+  align-items: stretch;
 }
 
 .setting-row strong,
@@ -705,6 +702,96 @@ body {
   color: var(--ink);
   background: var(--surface);
   box-shadow: var(--shadow-sm);
+}
+
+.font-family-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.font-family-options button {
+  min-height: 38px;
+  padding: 7px 9px;
+  color: var(--ink-soft);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.font-family-options button:hover {
+  border-color: var(--ink-faint);
+}
+
+.font-family-options button.is-active {
+  color: var(--ink);
+  background: var(--accent-weak);
+  border-color: var(--accent);
+}
+
+.accent-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.accent-option {
+  min-width: 0;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 9px;
+  color: var(--ink-soft);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.accent-option:hover {
+  border-color: var(--ink-faint);
+}
+
+.accent-option.is-active {
+  color: var(--ink);
+  background: var(--accent-weak);
+  border-color: var(--accent);
+}
+
+.accent-option__swatch,
+.accent-option--custom input {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  overflow: hidden;
+  background: none;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.accent-option--custom input::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.accent-option--custom input::-webkit-color-swatch {
+  border: 0;
+  border-radius: 50%;
+}
+
+.accent-option strong {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .background-options {

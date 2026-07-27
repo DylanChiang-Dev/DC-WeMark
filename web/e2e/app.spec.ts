@@ -90,8 +90,9 @@ test('settings expose 48 original theme presets', async ({ page }) => {
   await expect(panel.locator('#themeTotal')).toHaveText('48');
   await expect(panel.locator('.theme-option')).toHaveCount(6);
   await expect(panel.locator('.theme-option__palette > span')).toHaveCount(18);
-  const mist = panel.getByRole('button', { name: /霧銀/ });
-  const pulse = panel.getByRole('button', { name: /躍藍/ });
+  const themeGallery = panel.locator('#themeGallery');
+  const mist = themeGallery.getByRole('button', { name: /霧銀/ });
+  const pulse = themeGallery.getByRole('button', { name: /躍藍/ });
   await expect(mist).toBeVisible();
   await expect(pulse).toBeVisible();
 
@@ -152,6 +153,7 @@ test('font and named accent choices are visual and persist', async ({ page }) =>
   );
 
   const accentPresets = page.getByRole('group', { name: '強調色' });
+  await expect(page.locator('#accent')).toHaveAttribute('type', 'color');
   await accentPresets.getByRole('button', { name: '躍藍' }).click();
   await expect(page.locator('#preview h2').first()).toHaveAttribute('style', /#1673d1/i);
 

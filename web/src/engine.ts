@@ -16,6 +16,7 @@ export interface RenderResult {
 
 export type BackgroundStyle = 'warm' | 'grid' | 'none';
 export type FontSize = 'small' | 'medium' | 'large';
+export type FontFamily = 'theme' | 'sans' | 'serif' | 'kai';
 
 export interface RenderOptions {
   externalFootnotes: boolean;
@@ -23,6 +24,7 @@ export interface RenderOptions {
   accent: string;
   background: BackgroundStyle;
   fontSize: FontSize;
+  fontFamily: FontFamily;
 }
 
 interface RawRender {
@@ -60,6 +62,7 @@ export function render(markdown: string, themeId: string, opts: RenderOptions): 
     opts.accent,
     opts.background,
     opts.fontSize,
+    opts.fontFamily,
   );
   const parsed = JSON.parse(raw) as RawRender;
   if (!parsed.ok) {

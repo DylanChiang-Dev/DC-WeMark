@@ -59,7 +59,7 @@ The two middle steps are the crux: the WeChat editor **only accepts rich text wi
 | Typesetting engine | CommonMark + GFM (tables, code blocks, task lists) to WeChat-compatible inline-styled HTML | ✅ Done |
 | One-click copy | Writes `text/html` to the clipboard (incl. Safari path); paste into the WeChat editor with all styles intact | ✅ Done |
 | Original themes | 48 original presets across native, curated, and template themes, plus a custom accent color | ✅ Done |
-| Typesetting settings | Three copy backgrounds, three font sizes, two-way scroll sync, and saved preferences | ✅ Done |
+| Typesetting settings | Three copy backgrounds, three font sizes, four font families, visual color choices, two-way scroll sync, and saved preferences | ✅ Done |
 | Editing UX | Word count, `.md` import/export, Tab indent, `Cmd/Ctrl+B/I`, file drop, local draft | ✅ Done |
 | Code highlighting | Token coloring (optional feature; off by default to control size, see [size notes](docs/size-baseline.md)) | 🚧 opt-in |
 
