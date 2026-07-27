@@ -13,6 +13,7 @@ use crate::options::RenderOptions;
 use crate::theme::{style, Theme};
 
 const HEADING: [&str; 6] = ["h1", "h2", "h3", "h4", "h5", "h6"];
+const GRID_PAPER_STYLE: &str = "background-color:#fff;background-image:linear-gradient(rgba(47,54,64,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(47,54,64,0.05) 1px,transparent 1px);background-size:24px 24px;padding:24px 20px;";
 
 pub struct Writer {
     theme: &'static Theme,
@@ -61,7 +62,10 @@ impl Writer {
         if self.external_footnotes && !self.footnotes.is_empty() {
             self.render_references();
         }
-        let st = style::render(self.theme.root, &self.accent);
+        let st = style::inject(
+            style::render(self.theme.root, &self.accent),
+            GRID_PAPER_STYLE,
+        );
         format!("<section{st}>{}</section>", std::mem::take(&mut self.out))
     }
 

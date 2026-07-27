@@ -30,14 +30,18 @@ test('switching theme changes preview styling', async ({ page }) => {
   }
 });
 
-test('warm theme renders a square-paper article background', async ({ page }) => {
+test('all themes render a square-paper article background', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });
-  await page.getByRole('tab', { name: '暖陽' }).click();
 
   const article = page.locator('#preview > section');
-  await expect(article).toHaveCSS('background-image', /linear-gradient/);
-  await expect(article).toHaveCSS('background-size', '24px 24px, 24px 24px');
+  const themes = page.locator('.theme-pill');
+  const themeCount = await themes.count();
+  for (let index = 0; index < themeCount; index += 1) {
+    await themes.nth(index).click();
+    await expect(article).toHaveCSS('background-image', /linear-gradient/);
+    await expect(article).toHaveCSS('background-size', '24px 24px, 24px 24px');
+  }
   await expect(page.locator('#editor')).toHaveCSS('background-image', 'none');
 });
 
@@ -76,7 +80,6 @@ test('copy writes text/html to the clipboard', async ({ page, context, browserNa
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   await page.goto('/');
   await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });
-  await page.getByRole('tab', { name: '暖陽' }).click();
   await page.locator('#editor').fill('# 複製測試\n\n**粗體**內容。');
   await page.locator('#copyBtn').click();
   await expect(page.locator('#toast')).toHaveClass(/is-show/);

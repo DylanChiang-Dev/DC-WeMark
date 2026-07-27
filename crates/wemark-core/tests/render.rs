@@ -19,28 +19,34 @@ fn wraps_in_root_section_with_styles() {
 }
 
 #[test]
-fn warm_theme_renders_square_paper_background() {
-    let html = render("手帳內文", "warm", &RenderOptions::default())
-        .expect("warm theme renders")
-        .html;
-    let root_tag = html.split_once('>').expect("root tag closes").0;
+fn every_theme_renders_square_paper_background() {
+    for theme in wemark_core::themes() {
+        let html = render("手帳內文", theme.meta.id, &RenderOptions::default())
+            .unwrap_or_else(|_| panic!("theme {} failed to render", theme.meta.id))
+            .html;
+        let root_tag = html.split_once('>').expect("root tag closes").0;
 
-    assert!(
-        root_tag.contains("background-color:#fffaf5;"),
-        "warm root should have a paper color: {root_tag}"
-    );
-    assert!(
-        root_tag.contains("background-image:linear-gradient("),
-        "warm root should render grid lines: {root_tag}"
-    );
-    assert!(
-        root_tag.contains("background-size:24px 24px;"),
-        "warm root should use a stable square grid: {root_tag}"
-    );
-    assert!(
-        root_tag.contains("padding:24px 20px;"),
-        "warm root should keep text clear of the paper edge: {root_tag}"
-    );
+        assert!(
+            root_tag.contains("background-color:#fff;"),
+            "theme {} root should have a paper color: {root_tag}",
+            theme.meta.id
+        );
+        assert!(
+            root_tag.contains("background-image:linear-gradient("),
+            "theme {} root should render grid lines: {root_tag}",
+            theme.meta.id
+        );
+        assert!(
+            root_tag.contains("background-size:24px 24px;"),
+            "theme {} root should use a stable square grid: {root_tag}",
+            theme.meta.id
+        );
+        assert!(
+            root_tag.contains("padding:24px 20px;"),
+            "theme {} root should keep text clear of the paper edge: {root_tag}",
+            theme.meta.id
+        );
+    }
 }
 
 #[test]
