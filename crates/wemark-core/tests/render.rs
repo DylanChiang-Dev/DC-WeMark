@@ -263,6 +263,43 @@ fn themes_list_contains_default() {
 }
 
 #[test]
+fn every_theme_styles_standard_markdown_elements() {
+    let required = [
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6",
+        "p",
+        "strong",
+        "em",
+        "del",
+        "a",
+        "blockquote",
+        "ul",
+        "ol",
+        "li",
+        "hr",
+        "img",
+        "code-inline",
+        "table",
+        "th",
+        "td",
+    ];
+
+    for theme in wemark_core::themes() {
+        for element in required {
+            assert!(
+                !theme.element(element).is_empty(),
+                "theme {} is missing a style for {element}",
+                theme.meta.id
+            );
+        }
+    }
+}
+
+#[test]
 fn every_theme_renders_rich_doc_without_forbidden() {
     let md = "# 標題\n\n**粗體** *斜體* `碼` [外鏈](https://example.com)\n\n\
               > 引言\n\n\

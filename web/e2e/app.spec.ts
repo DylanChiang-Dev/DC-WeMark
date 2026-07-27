@@ -167,13 +167,12 @@ test('custom accent persists across reload', async ({ page }) => {
   await expect(page.locator('#accent')).toHaveValue('#ff0066');
 });
 
-test('inserting a module renders a container in the preview', async ({ page }) => {
+test('standard Markdown is the only visible authoring path', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });
-  await page.locator('#editor').fill('# 標題\n');
-  await page.selectOption('#insertModule', 'warn');
-  // warn 容器外殼帶琥珀色左邊條
-  await expect(page.locator('#preview section[style*="#f59e0b"]')).toBeVisible();
+  await expect(page.locator('#insertModule')).toHaveCount(0);
+  await expect(page.locator('#editor')).not.toHaveValue(/:::/);
+  await expect(page.locator('#editor')).toHaveValue(/- \[x\]/);
 });
 
 test('copy writes text/html to the clipboard', async ({ page, context, browserName }) => {
@@ -181,7 +180,9 @@ test('copy writes text/html to the clipboard', async ({ page, context, browserNa
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   await page.goto('/');
   await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });
-  await page.locator('#editor').fill('# 複製測試\n\n**粗體**內容。');
+  await page.locator('#editor').fill(
+    '# 複製測試\n\n> 引用\n\n- [x] 任務\n\n| 欄位 | 值 |\n|---|---|\n| A | B |\n',
+  );
   await page.locator('#copyBtn').click();
   await expect(page.locator('#toast')).toHaveClass(/is-show/);
 
@@ -191,6 +192,9 @@ test('copy writes text/html to the clipboard', async ({ page, context, browserNa
   expect(html).toContain('background-image:linear-gradient');
   expect(html).toContain('background-size:24px 24px');
   expect(html).not.toContain('class=');
+  expect(html).not.toContain('<style');
+  expect(html).not.toContain('<script');
+  expect(html).not.toContain('position:');
   // font-family 的雙引號必須轉義；否則瀏覽器會把 style 屬性解析壞掉，
   // 產生像 `ui"=""` 這種殘骸（貼進公眾號會失真）。
   expect(html).not.toMatch(/="">/);
