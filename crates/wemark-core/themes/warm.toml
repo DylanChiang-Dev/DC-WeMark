@@ -16,6 +16,10 @@ accent-weak = "#fcefe4"
 quote-text = "#7a6a58"
 
 [root]
+background-color = "#fffaf5"
+background-image = "linear-gradient(rgba(224, 116, 60, 0.10) 1px, transparent 1px), linear-gradient(90deg, rgba(224, 116, 60, 0.10) 1px, transparent 1px)"
+background-size = "24px 24px"
+padding = "24px 20px"
 font-family = "-apple-system, BlinkMacSystemFont, \"Segoe UI\", \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", Arial, sans-serif"
 font-size = "16px"
 line-height = "1.82"
