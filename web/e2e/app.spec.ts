@@ -58,20 +58,66 @@ test('all themes render a square-paper article background', async ({ page }) => 
   await expect(page.locator('#editor')).toHaveCSS('background-image', 'none');
 });
 
-test('square-paper background can be disabled and persists', async ({ page }) => {
+test('background style can switch between grid, warm, and none', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });
 
-  const toggle = page.getByRole('switch', { name: '方格紙背景' });
+  const background = page.getByLabel('複製背景');
   const article = page.locator('#preview > section');
-  await expect(toggle).toBeChecked();
-  await toggle.uncheck();
+  await expect(background).toHaveValue('grid');
+
+  await background.selectOption('warm');
   await expect(article).toHaveCSS('background-image', 'none');
+  await expect(article).toHaveCSS('background-color', 'rgb(255, 248, 238)');
+
+  await background.selectOption('none');
+  await expect(article).toHaveCSS('background-image', 'none');
+  await expect(article).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
 
   await page.reload();
   await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });
-  await expect(toggle).not.toBeChecked();
+  await expect(background).toHaveValue('none');
   await expect(article).toHaveCSS('background-image', 'none');
+});
+
+test('settings expose 48 original theme presets', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });
+  await page.getByRole('button', { name: '排版設定' }).click();
+
+  const panel = page.getByRole('dialog', { name: '排版設定' });
+  await expect(panel).toBeVisible();
+  await expect(panel.locator('#themeTotal')).toHaveText('48');
+  await expect(panel.locator('.theme-option')).toHaveCount(6);
+
+  await panel.getByRole('tab', { name: /精選/ }).click();
+  await expect(panel.locator('.theme-option')).toHaveCount(10);
+  await panel.getByRole('tab', { name: /模板/ }).click();
+  await expect(panel.locator('.theme-option')).toHaveCount(32);
+
+  await panel.locator('[data-theme-id="airy-blue"]').click();
+  await expect(panel.locator('#currentThemeName')).toHaveText('留白藍');
+  await expect(page.locator('#preview h1')).toHaveAttribute('style', /#2563eb/i);
+});
+
+test('font size and scroll sync preferences persist', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });
+  await page.getByRole('button', { name: '排版設定' }).click();
+
+  const fontSizes = page.getByRole('group', { name: '文章字級' });
+  await fontSizes.getByRole('button', { name: '小' }).click();
+  await expect(page.locator('#preview > section')).toHaveCSS('font-size', '14px');
+
+  const sync = page.getByRole('switch', { name: '雙向捲動同步' });
+  await expect(sync).toBeChecked();
+  await sync.uncheck();
+
+  await page.reload();
+  await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('#preview > section')).toHaveCSS('font-size', '14px');
+  await page.getByRole('button', { name: '排版設定' }).click();
+  await expect(page.getByRole('switch', { name: '雙向捲動同步' })).not.toBeChecked();
 });
 
 test('word count reflects editor content', async ({ page }) => {
@@ -124,7 +170,7 @@ test('copy writes text/html to the clipboard', async ({ page, context, browserNa
   expect(html).not.toMatch(/="">/);
   expect(html).not.toContain('font-family:"');
 
-  await page.getByRole('switch', { name: '方格紙背景' }).uncheck();
+  await page.getByLabel('複製背景').selectOption('none');
   await page.locator('#copyBtn').click();
   const plainHtml = await readClipboardHtml(page);
   expect(plainHtml).not.toContain('background-image:');

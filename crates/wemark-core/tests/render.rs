@@ -1,4 +1,4 @@
-use wemark_core::{render, RenderOptions};
+use wemark_core::{render, BackgroundStyle, FontSize, RenderOptions};
 
 fn r(md: &str) -> String {
     render(md, "default", &RenderOptions::default())
@@ -50,23 +50,73 @@ fn every_theme_renders_square_paper_background() {
 }
 
 #[test]
-fn square_paper_background_can_be_disabled() {
-    let html = render(
-        "純色內文",
-        "default",
-        &RenderOptions {
-            grid_background: false,
-            ..RenderOptions::default()
-        },
-    )
-    .expect("default theme renders without grid")
-    .html;
-    let root_tag = html.split_once('>').expect("root tag closes").0;
+fn background_styles_render_distinct_root_styles() {
+    let cases = [
+        (
+            BackgroundStyle::Grid,
+            Some("background-color:#fff;"),
+            true,
+        ),
+        (
+            BackgroundStyle::Warm,
+            Some("background-color:#fff8ee;"),
+            false,
+        ),
+        (BackgroundStyle::None, None, false),
+    ];
 
-    assert!(root_tag.contains("background-color:#fff;"));
-    assert!(root_tag.contains("padding:24px 20px;"));
-    assert!(!root_tag.contains("background-image:"));
-    assert!(!root_tag.contains("background-size:"));
+    for (background, color, has_grid) in cases {
+        let html = render(
+            "背景測試",
+            "default",
+            &RenderOptions {
+                background,
+                ..RenderOptions::default()
+            },
+        )
+        .expect("default theme renders")
+        .html;
+        let root_tag = html.split_once('>').expect("root tag closes").0;
+
+        assert!(root_tag.contains("padding:24px 20px;"));
+        assert_eq!(
+            root_tag.contains("background-image:linear-gradient("),
+            has_grid
+        );
+        assert_eq!(root_tag.contains("background-size:24px 24px;"), has_grid);
+        if let Some(color) = color {
+            assert!(root_tag.contains(color), "{root_tag}");
+        } else {
+            assert!(!root_tag.contains("background-color:"), "{root_tag}");
+        }
+    }
+}
+
+#[test]
+fn font_size_scales_body_and_headings() {
+    let cases = [
+        (FontSize::Small, "font-size:14px;", "font-size:21px;"),
+        (FontSize::Medium, "font-size:15px;", "font-size:22px;"),
+        (FontSize::Large, "font-size:16px;", "font-size:23px;"),
+    ];
+
+    for (font_size, body_size, heading_size) in cases {
+        let html = render(
+            "# 字級測試",
+            "default",
+            &RenderOptions {
+                font_size,
+                ..RenderOptions::default()
+            },
+        )
+        .expect("default theme renders")
+        .html;
+        let root_tag = html.split_once('>').expect("root tag closes").0;
+        let heading_tag = html.split_once("<h1 ").expect("h1 opens").1;
+
+        assert!(root_tag.contains(body_size), "{root_tag}");
+        assert!(heading_tag.contains(heading_size), "{heading_tag}");
+    }
 }
 
 #[test]
