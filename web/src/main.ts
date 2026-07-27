@@ -148,25 +148,6 @@ function setupDivider(): void {
   });
 }
 
-const MODULE_TEMPLATES: Record<string, string> = {
-  note: '\n::: note\n💡 這裡是提示內容。\n:::\n',
-  tip: '\n::: tip\n✅ 這裡是成功／要點內容。\n:::\n',
-  warn: '\n::: warn\n⚠️ 這裡是警告內容。\n:::\n',
-  danger: '\n::: danger\n🚫 這裡是危險／禁止內容。\n:::\n',
-  card: '\n::: card\n### 卡片標題\n卡片內容，可包含清單、連結等 Markdown。\n:::\n',
-  quote: '\n::: quote\n把最想被記住的一句話放在這裡。\n:::\n',
-  timeline: '\n::: timeline\n- **2024** 起點\n- **2025** 進展\n- **2026** 現在\n:::\n',
-};
-
-function setupModuleInserter(): void {
-  const select = $<HTMLSelectElement>('insertModule');
-  select.addEventListener('change', () => {
-    const tpl = MODULE_TEMPLATES[select.value];
-    if (tpl) editor.insertSnippet(tpl);
-    select.value = '';
-  });
-}
-
 function setupFileIO(): void {
   $('importBtn').addEventListener('click', () => fileInput.click());
   fileInput.addEventListener('change', () => {
@@ -220,7 +201,6 @@ async function boot(): Promise<void> {
   setupWidthToggle();
   setupDivider();
   setupFileIO();
-  setupModuleInserter();
   setupMobileToggle();
   setupScrollSync();
   $('copyBtn').addEventListener('click', () => void onCopy());

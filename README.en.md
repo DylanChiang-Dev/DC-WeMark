@@ -58,10 +58,12 @@ The two middle steps are the crux: the WeChat editor **only accepts rich text wi
 | Split-pane editor | Markdown input on the left, live WeChat-styled preview on the right (draggable divider, phone/wide toggle) | ✅ Done |
 | Typesetting engine | CommonMark + GFM (tables, code blocks, task lists) to WeChat-compatible inline-styled HTML | ✅ Done |
 | One-click copy | Writes `text/html` to the clipboard (incl. Safari path); paste into the WeChat editor with all styles intact | ✅ Done |
-| Original themes | 5 original switchable themes + custom accent color | ✅ Done |
-| Layout modules | `:::` container syntax: callouts, cards, pull quotes, timelines ([syntax](docs/container-syntax.md)) | ✅ Done |
+| Original themes | 48 original presets across native, curated, and template themes, plus a custom accent color | ✅ Done |
+| Typesetting settings | Three copy backgrounds, three font sizes, two-way scroll sync, and saved preferences | ✅ Done |
 | Editing UX | Word count, `.md` import/export, Tab indent, `Cmd/Ctrl+B/I`, file drop, local draft | ✅ Done |
 | Code highlighting | Token coloring (optional feature; off by default to control size, see [size notes](docs/size-baseline.md)) | 🚧 opt-in |
+
+New articles only need standard Markdown. The legacy `:::` container syntax still renders for backward compatibility, but has no insertion UI and will not receive new modules ([compatibility notes](docs/container-syntax.md)).
 
 ## 🚀 Getting Started
 
@@ -122,7 +124,7 @@ Current version: **1.0.1** (feature-complete, with Cloudflare Pages hosting and 
 - [x] **0.1.0** — Engine MVP: Markdown → WeChat-compatible HTML, with 1 default theme
 - [x] **0.2.0** — Split-pane editor + live preview + one-click copy
 - [x] **0.3.0** — Multi-theme system and switching + custom accent
-- [x] **0.4.0** — Advanced layout modules (callouts, cards, pull quotes, timelines)
+- [x] **0.4.0** — Advanced layout modules (now retained only for legacy-document compatibility)
 - [x] **1.0.0** — Docker self-hosting + Cloudflare Pages deploy pipeline
 
 Semantic three-part versioning; every release gets a git tag. Next: size optimization for rich code highlighting (lazy-loaded or vendored syntaxes).
@@ -141,6 +143,6 @@ If this project helps you, star it — help more writers still hand-tweaking WeC
 
 - [**doocs/md**](https://github.com/doocs/md) — the web-editor form factor precedent (MIT)
 - [**markdown-nice**](https://github.com/mdnice/markdown-nice) — the themed-typesetting direction (GPL-3.0)
-- [**md2wechat-skill**](https://github.com/geekjourneyx/md2wechat-skill) — the layout-module syntax idea (Source Available License)
+- [**md2wechat-skill**](https://github.com/geekjourneyx/md2wechat-skill) — a reference for the Markdown workflow and public feature boundaries (Source Available License)
 
-> Only ideas and problem framing were borrowed. **All code, theme styles, and copy are independently original** — zero code borrowed, zero styles copied. This is a clean-room implementation; none of the above projects' source code is consulted during development.
+> Only public feature boundaries and problem framing were referenced. **All code, theme styles, and copy are independently original**; no source code or styles from the projects above were copied.

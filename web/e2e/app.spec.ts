@@ -202,7 +202,7 @@ test('copy writes text/html to the clipboard', async ({ page, context, browserNa
 
   await page.getByLabel('複製背景').selectOption('none');
   await page.locator('#copyBtn').click();
+  await expect.poll(() => readClipboardHtml(page)).not.toContain('background-image:');
   const plainHtml = await readClipboardHtml(page);
-  expect(plainHtml).not.toContain('background-image:');
   expect(plainHtml).not.toContain('background-size:');
 });

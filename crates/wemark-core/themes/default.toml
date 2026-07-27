@@ -61,6 +61,20 @@ color = "{{accent}}"
 line-height = "1.5"
 margin = "20px 0 10px"
 
+[elements.h5]
+font-size = "15px"
+font-weight = "600"
+color = "{{text}}"
+line-height = "1.5"
+margin = "16px 0 8px"
+
+[elements.h6]
+font-size = "14px"
+font-weight = "600"
+color = "{{muted}}"
+line-height = "1.5"
+margin = "14px 0 7px"
+
 [elements.p]
 margin = "16px 0"
 line-height = "1.75"

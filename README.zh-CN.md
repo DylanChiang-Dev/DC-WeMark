@@ -60,10 +60,12 @@ flowchart LR
 | 双栏编辑器 | 左侧 Markdown 输入，右侧公众号样式实时预览（含拖拽分隔线、手机/宽版切换） | ✅ 完成 |
 | 排版引擎 | CommonMark + GFM（表格、代码块、任务清单），输出公众号兼容的 inline-styled HTML | ✅ 完成 |
 | 一键复制 | 以 `text/html` 写入剪贴板（含 Safari 兼容路径），粘贴进公众号编辑器保留全部样式 | ✅ 完成 |
-| 原创主题 | 5 套原创主题可切换（晴川／墨白／晚报／松石／暖阳）＋ 自定义强调色 | ✅ 完成 |
-| 排版模块 | `:::` 容器语法：提示框、卡片、金句、时间轴等（见 [语法说明](docs/container-syntax.md)） | ✅ 完成 |
+| 原创主题 | 48 款原创预设可切换，涵盖原生、精选与模板主题，并支持自定义强调色 | ✅ 完成 |
+| 排版设置 | 三种复制背景、三档字号、双向滚动同步与偏好保存 | ✅ 完成 |
 | 编辑体验 | 字数统计、`.md` 导入／导出、Tab 缩进、`Cmd/Ctrl+B/I`、拖入文件、本地草稿 | ✅ 完成 |
 | 代码高亮 | 语法 token 上色（可选 feature；默认关以控体积，见 [体积说明](docs/size-baseline.md)） | 🚧 opt-in |
+
+新文章使用标准 Markdown 即可。旧文稿中的 `:::` 容器语法仍可正常渲染，但仅作向后兼容，不再提供插入入口或扩展新模块（见[兼容说明](docs/container-syntax.md)）。
 
 ## 🚀 快速开始
 
@@ -124,7 +126,7 @@ Cloudflare Pages 直接连接 GitHub 仓库 `DylanChiang-Dev/DC-WeMark`：
 - [x] **0.1.0** — 排版引擎 MVP：Markdown → 公众号兼容 HTML，含 1 套默认主题
 - [x] **0.2.0** — 双栏编辑器 + 实时预览 + 一键复制
 - [x] **0.3.0** — 多主题系统与主题切换 + 自定义强调色
-- [x] **0.4.0** — 高级排版模块（提示框、卡片、金句、时间轴）
+- [x] **0.4.0** — 高级排版模块（现仅作旧文稿兼容）
 - [x] **1.0.0** — Docker 自部署方案 + Cloudflare Pages 部署流程
 
 版本采用三段式语义化版本号，每个版本打 git tag。后续：富代码高亮的体积优化（延迟加载或 vendored 语法文件）。
@@ -143,6 +145,6 @@ Cloudflare Pages 直接连接 GitHub 仓库 `DylanChiang-Dev/DC-WeMark`：
 
 - [**doocs/md**](https://github.com/doocs/md) —— 网页版微信 Markdown 编辑器的形态先例（MIT）
 - [**markdown-nice**](https://github.com/mdnice/markdown-nice) —— 主题化公众号排版的理念方向（GPL-3.0）
-- [**md2wechat-skill**](https://github.com/geekjourneyx/md2wechat-skill) —— 排版模块扩展语法的理念启发（Source Available License）
+- [**md2wechat-skill**](https://github.com/geekjourneyx/md2wechat-skill) —— Markdown 排版工作流与公开功能边界的参考（Source Available License）
 
-> 仅借鉴功能理念与问题意识，**代码、主题样式、文案全部独立原创**——零代码借用、零样式复制。本项目为 clean-room 独立实现，开发过程不参考上述任何项目的源代码。
+> 仅参考公开功能边界与问题意识，**代码、主题样式、文案全部独立原创**，未复制上述项目的源代码或样式。
