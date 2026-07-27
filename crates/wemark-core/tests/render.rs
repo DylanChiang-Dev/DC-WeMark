@@ -19,6 +19,31 @@ fn wraps_in_root_section_with_styles() {
 }
 
 #[test]
+fn warm_theme_renders_square_paper_background() {
+    let html = render("手帳內文", "warm", &RenderOptions::default())
+        .expect("warm theme renders")
+        .html;
+    let root_tag = html.split_once('>').expect("root tag closes").0;
+
+    assert!(
+        root_tag.contains("background-color:#fffaf5;"),
+        "warm root should have a paper color: {root_tag}"
+    );
+    assert!(
+        root_tag.contains("background-image:linear-gradient("),
+        "warm root should render grid lines: {root_tag}"
+    );
+    assert!(
+        root_tag.contains("background-size:24px 24px;"),
+        "warm root should use a stable square grid: {root_tag}"
+    );
+    assert!(
+        root_tag.contains("padding:24px 20px;"),
+        "warm root should keep text clear of the paper edge: {root_tag}"
+    );
+}
+
+#[test]
 fn output_has_no_forbidden_constructs() {
     let md = "# T\n\n\
               普通段落與 `行內碼`。\n\n\

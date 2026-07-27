@@ -30,6 +30,16 @@ test('switching theme changes preview styling', async ({ page }) => {
   }
 });
 
+test('warm theme renders a square-paper article background', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });
+  await page.getByRole('tab', { name: '暖陽' }).click();
+
+  const article = page.locator('#preview > section');
+  await expect(article).toHaveCSS('background-image', /linear-gradient/);
+  await expect(article).toHaveCSS('background-size', '24px 24px');
+});
+
 test('word count reflects editor content', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });
