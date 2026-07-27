@@ -4,9 +4,7 @@ use super::Style;
 
 const ACCENT_TOKEN: &str = "{{accent}}";
 
-/// 產生可直接接在標籤名後的 style 屬性字串（含前導空白）。
-/// 空樣式回傳空字串（不輸出 style 屬性）。
-pub fn render(pairs: Style, accent: &str) -> String {
+pub fn render_scaled(pairs: Style, accent: &str, font_delta_px: i16) -> String {
     if pairs.is_empty() {
         return String::new();
     }
@@ -17,16 +15,29 @@ pub fn render(pairs: Style, accent: &str) -> String {
         s.push(':');
         // CSS 值可能含雙引號（font-family: "PingFang SC"）——必須做 HTML 屬性轉義，
         // 否則會提前關閉 style="…" 屬性、產生壞掉的 HTML（貼進公眾號會失真）。
-        let resolved = if v.contains(ACCENT_TOKEN) {
+        let mut resolved = if v.contains(ACCENT_TOKEN) {
             v.replace(ACCENT_TOKEN, accent)
         } else {
             (*v).to_string()
         };
+        if *k == "font-size" {
+            resolved = scale_px(&resolved, font_delta_px);
+        }
         s.push_str(&crate::render::escape(&resolved));
         s.push(';');
     }
     s.push('"');
     s
+}
+
+fn scale_px(value: &str, delta: i16) -> String {
+    let Some(raw) = value.strip_suffix("px") else {
+        return value.to_string();
+    };
+    let Ok(size) = raw.parse::<i16>() else {
+        return value.to_string();
+    };
+    format!("{}px", (size + delta).max(10))
 }
 
 /// 在既有 style 屬性字串尾端補一段宣告（用於表格對齊等動態樣式）。

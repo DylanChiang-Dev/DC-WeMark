@@ -10,14 +10,16 @@ use comrak::nodes::{AstNode, ListType, NodeList, NodeTable, NodeValue, TableAlig
 
 use crate::compat;
 use crate::options::RenderOptions;
-use crate::theme::{style, Theme};
+use crate::theme::{style, Style, Theme};
 
 const HEADING: [&str; 6] = ["h1", "h2", "h3", "h4", "h5", "h6"];
-const GRID_PAPER_STYLE: &str = "background-color:#fff;background-image:linear-gradient(rgba(47,54,64,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(47,54,64,0.05) 1px,transparent 1px);background-size:24px 24px;padding:24px 20px;";
+const ARTICLE_BASE_STYLE: &str = "padding:24px 20px;";
 
 pub struct Writer {
     theme: &'static Theme,
     accent: String,
+    background: crate::BackgroundStyle,
+    font_delta_px: i16,
     external_footnotes: bool,
     out: String,
     footnotes: Vec<(String, String)>,
@@ -37,6 +39,8 @@ impl Writer {
         Self {
             theme,
             accent,
+            background: opts.background,
+            font_delta_px: opts.font_size.delta_px(),
             external_footnotes: opts.external_links_as_footnotes,
             out: String::new(),
             footnotes: Vec::new(),
@@ -62,11 +66,13 @@ impl Writer {
         if self.external_footnotes && !self.footnotes.is_empty() {
             self.render_references();
         }
-        let st = style::inject(
-            style::render(self.theme.root, &self.accent),
-            GRID_PAPER_STYLE,
-        );
+        let st = style::inject(self.render_style(self.theme.root), ARTICLE_BASE_STYLE);
+        let st = style::inject(st, self.background.css());
         format!("<section{st}>{}</section>", std::mem::take(&mut self.out))
+    }
+
+    fn render_style(&self, pairs: Style) -> String {
+        style::render_scaled(pairs, &self.accent, self.font_delta_px)
     }
 
     fn render_children<'a>(&mut self, node: &'a AstNode<'a>) {
@@ -95,7 +101,7 @@ impl Writer {
             NodeValue::Emph => self.wrap("em", "em", node),
             NodeValue::Strikethrough => self.wrap("del", "del", node),
             NodeValue::Code(c) => {
-                let st = style::render(self.theme.element("code-inline"), &self.accent);
+                let st = self.render_style(self.theme.element("code-inline"));
                 self.out
                     .push_str(&format!("<code{st}>{}</code>", escape(&c.literal)));
             }
@@ -109,7 +115,7 @@ impl Writer {
             NodeValue::TaskItem(ti) => self.render_task_item(node, ti.symbol),
             NodeValue::CodeBlock(cb) => self.render_code_block(&cb.info, &cb.literal),
             NodeValue::ThematicBreak => {
-                let st = style::render(self.theme.element("hr"), &self.accent);
+                let st = self.render_style(self.theme.element("hr"));
                 self.out.push_str(&format!("<hr{st}>"));
             }
             NodeValue::Table(t) => self.render_table(node, &t),
@@ -121,7 +127,7 @@ impl Writer {
 
     /// `<tag STYLE>children</tag>`，樣式取自主題 `key`。
     fn wrap<'a>(&mut self, tag: &str, key: &str, node: &'a AstNode<'a>) {
-        let st = style::render(self.theme.element(key), &self.accent);
+        let st = self.render_style(self.theme.element(key));
         self.out.push('<');
         self.out.push_str(tag);
         self.out.push_str(&st);
@@ -137,11 +143,11 @@ impl Writer {
         if self.external_footnotes && compat::is_external_link(url) {
             self.footnotes.push((inner.clone(), url.to_string()));
             let n = self.footnotes.len();
-            let st = style::render(self.theme.element("footnote-sup"), &self.accent);
+            let st = self.render_style(self.theme.element("footnote-sup"));
             self.out.push_str(&inner);
             self.out.push_str(&format!("<sup{st}>[{n}]</sup>"));
         } else {
-            let st = style::render(self.theme.element("a"), &self.accent);
+            let st = self.render_style(self.theme.element("a"));
             self.out
                 .push_str(&format!("<a href=\"{}\"{st}>{inner}</a>", escape(url)));
         }
@@ -150,7 +156,7 @@ impl Writer {
     fn render_image<'a>(&mut self, node: &'a AstNode<'a>, url: &str) {
         // alt 來自子節點：render_children 已對文字做 HTML 轉義，strip_tags 去標籤後可直接放入屬性。
         let alt = strip_tags(&self.capture(|w| w.render_children(node)));
-        let st = style::render(self.theme.element("img"), &self.accent);
+        let st = self.render_style(self.theme.element("img"));
         self.out
             .push_str(&format!("<img src=\"{}\" alt=\"{alt}\"{st}>", escape(url)));
     }
@@ -158,7 +164,7 @@ impl Writer {
     fn render_list<'a>(&mut self, node: &'a AstNode<'a>, nl: &NodeList) {
         let ordered = matches!(nl.list_type, ListType::Ordered);
         let key = if ordered { "ol" } else { "ul" };
-        let st = style::render(self.theme.element(key), &self.accent);
+        let st = self.render_style(self.theme.element(key));
         if ordered && nl.start != 1 {
             self.out
                 .push_str(&format!("<ol start=\"{}\"{st}>", nl.start));
@@ -179,7 +185,7 @@ impl Writer {
 
     fn render_task_item<'a>(&mut self, node: &'a AstNode<'a>, sym: Option<char>) {
         let checked = matches!(sym, Some(c) if c != ' ');
-        let st = style::render(self.theme.element("li"), &self.accent);
+        let st = self.render_style(self.theme.element("li"));
         self.out.push_str(&format!("<li{st}>"));
         self.out.push_str(if checked { "☑ " } else { "☐ " });
         self.render_children(node);
@@ -211,12 +217,12 @@ impl Writer {
     fn render_code_block(&mut self, info: &str, literal: &str) {
         let lang = info.split_whitespace().next().unwrap_or("");
         let inner = code::highlight(literal, lang, self.theme.code.theme);
-        let st = style::render(self.theme.code.block, &self.accent);
+        let st = self.render_style(self.theme.code.block);
         self.out.push_str(&format!("<pre{st}>{inner}</pre>"));
     }
 
     fn render_table<'a>(&mut self, node: &'a AstNode<'a>, t: &NodeTable) {
-        let tstyle = style::render(self.theme.element("table"), &self.accent);
+        let tstyle = self.render_style(self.theme.element("table"));
         self.out.push_str(&format!("<table{tstyle}>"));
         let mut first = true;
         for row in node.children() {
@@ -227,7 +233,7 @@ impl Writer {
             self.out.push_str("<tr>");
             for (ci, cell) in row.children().enumerate() {
                 let key = if is_header { "th" } else { "td" };
-                let mut st = style::render(self.theme.element(key), &self.accent);
+                let mut st = self.render_style(self.theme.element(key));
                 let ta = match t.alignments.get(ci) {
                     Some(TableAlignment::Left) => "left",
                     Some(TableAlignment::Center) => "center",
@@ -261,9 +267,9 @@ impl Writer {
 
     fn render_references(&mut self) {
         let fns = self.footnotes.clone();
-        let sec = style::render(self.theme.element("footnote-section"), &self.accent);
-        let title = style::render(self.theme.element("footnote-title"), &self.accent);
-        let item = style::render(self.theme.element("footnote-item"), &self.accent);
+        let sec = self.render_style(self.theme.element("footnote-section"));
+        let title = self.render_style(self.theme.element("footnote-title"));
+        let item = self.render_style(self.theme.element("footnote-item"));
         self.out.push_str(&format!("<section{sec}>"));
         self.out.push_str(&format!("<p{title}>參考連結</p>"));
         for (i, (text, url)) in fns.iter().enumerate() {

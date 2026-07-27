@@ -1,8 +1,13 @@
 // localStorage 草稿與偏好（全本地，符合隱私承諾）。
 
+import type { BackgroundStyle, FontSize } from './engine.js';
+
 const DRAFT_KEY = 'wemark:draft:v1';
 const THEME_KEY = 'wemark:theme:v1';
 const ACCENT_KEY = 'wemark:accent:v1';
+const BACKGROUND_KEY = 'wemark:background:v1';
+const FONT_SIZE_KEY = 'wemark:font-size:v1';
+const SCROLL_SYNC_KEY = 'wemark:scroll-sync:v1';
 
 export function loadDraft(): string | null {
   try {
@@ -59,6 +64,56 @@ export function saveAccent(accent: string): void {
     else localStorage.removeItem(ACCENT_KEY);
   } catch {
     // 忽略
+  }
+}
+
+export function loadBackground(): BackgroundStyle {
+  try {
+    const value = localStorage.getItem(BACKGROUND_KEY);
+    return value === 'warm' || value === 'none' ? value : 'grid';
+  } catch {
+    return 'grid';
+  }
+}
+
+export function saveBackground(background: BackgroundStyle): void {
+  try {
+    localStorage.setItem(BACKGROUND_KEY, background);
+  } catch {
+    // 忽略（隱私模式 / 配額）
+  }
+}
+
+export function loadFontSize(): FontSize {
+  try {
+    const value = localStorage.getItem(FONT_SIZE_KEY);
+    return value === 'small' || value === 'large' ? value : 'medium';
+  } catch {
+    return 'medium';
+  }
+}
+
+export function saveFontSize(fontSize: FontSize): void {
+  try {
+    localStorage.setItem(FONT_SIZE_KEY, fontSize);
+  } catch {
+    // 忽略（隱私模式 / 配額）
+  }
+}
+
+export function loadScrollSync(): boolean {
+  try {
+    return localStorage.getItem(SCROLL_SYNC_KEY) !== 'false';
+  } catch {
+    return true;
+  }
+}
+
+export function saveScrollSync(enabled: boolean): void {
+  try {
+    localStorage.setItem(SCROLL_SYNC_KEY, String(enabled));
+  } catch {
+    // 忽略（隱私模式 / 配額）
   }
 }
 

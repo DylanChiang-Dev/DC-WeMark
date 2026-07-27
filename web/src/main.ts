@@ -2,16 +2,35 @@
 
 import { copyHtml } from './clipboard.js';
 import { createTextareaEditor } from './editor.js';
-import { initEngine, listThemes, render, type RenderOptions } from './engine.js';
+import {
+  initEngine,
+  listThemes,
+  render,
+  type BackgroundStyle,
+  type FontSize,
+  type RenderOptions,
+} from './engine.js';
 import { SAMPLE_MARKDOWN } from './sample.js';
+import { createSettingsPanel, type SettingsController } from './settings.js';
 import { renderThemeSwitcher } from './themes.js';
+import {
+  getThemePreset,
+  QUICK_THEME_PRESETS,
+  type ThemePreset,
+} from './theme-presets.js';
 import {
   clearDraft,
   debouncedSaveDraft,
   loadAccent,
+  loadBackground,
   loadDraft,
+  loadFontSize,
+  loadScrollSync,
   loadTheme,
   saveAccent,
+  saveBackground,
+  saveFontSize,
+  saveScrollSync,
   saveTheme,
 } from './storage.js';
 import { countWords, debounce, downloadText } from './util.js';
@@ -32,19 +51,27 @@ const toastEl = $('toast');
 const fileInput = $<HTMLInputElement>('fileInput');
 const appEl = document.querySelector<HTMLElement>('.app')!;
 
-let currentTheme = loadTheme() ?? 'default';
+let currentPreset = getThemePreset(loadTheme());
 let currentAccent = loadAccent(); // 空 = 用主題預設
+let currentBackground = loadBackground();
+let currentFontSize = loadFontSize();
+let scrollSyncEnabled = loadScrollSync();
 let lastHtml = '';
-const themeAccents = new Map<string, string>();
+let settingsController: SettingsController | undefined;
 
 const editor = createTextareaEditor(editorEl);
 const persistDraft = debouncedSaveDraft(1000);
 
 function renderPreview(): void {
   const md = editor.getValue();
-  const opts: RenderOptions = { externalFootnotes: true, accent: currentAccent };
+  const opts: RenderOptions = {
+    externalFootnotes: true,
+    accent: currentAccent || currentPreset.accent,
+    background: currentBackground,
+    fontSize: currentFontSize,
+  };
   try {
-    const result = render(md, currentTheme, opts);
+    const result = render(md, currentPreset.engineTheme, opts);
     lastHtml = result.html;
     previewEl.innerHTML = result.html;
     setStatus(result.footnotes > 0 ? `已整理 ${result.footnotes} 條外部連結` : '就緒');
@@ -171,13 +198,22 @@ function setupMobileToggle(): void {
 // 依比例把左欄捲動同步到右欄預覽（單向，避免回饋迴圈）。
 function setupScrollSync(): void {
   const previewPane = document.querySelector<HTMLElement>('.pane--preview')!;
-  editorEl.addEventListener('scroll', () => {
-    const max = editorEl.scrollHeight - editorEl.clientHeight;
-    if (max <= 0) return;
-    const ratio = editorEl.scrollTop / max;
-    const target = previewPane.scrollHeight - previewPane.clientHeight;
-    previewPane.scrollTop = ratio * target;
-  });
+  let lockedTarget: HTMLElement | null = null;
+
+  const sync = (source: HTMLElement, target: HTMLElement) => {
+    if (!scrollSyncEnabled || lockedTarget === source) return;
+    const sourceMax = source.scrollHeight - source.clientHeight;
+    const targetMax = target.scrollHeight - target.clientHeight;
+    if (sourceMax <= 0 || targetMax <= 0) return;
+    lockedTarget = target;
+    target.scrollTop = (source.scrollTop / sourceMax) * targetMax;
+    requestAnimationFrame(() => {
+      lockedTarget = null;
+    });
+  };
+
+  editorEl.addEventListener('scroll', () => sync(editorEl, previewPane));
+  previewPane.addEventListener('scroll', () => sync(previewPane, editorEl));
 }
 
 async function boot(): Promise<void> {
@@ -203,15 +239,14 @@ async function boot(): Promise<void> {
     return;
   }
 
-  const themes = listThemes();
-  for (const t of themes) themeAccents.set(t.id, t.accent);
-  if (!themes.some((t) => t.id === currentTheme)) {
-    currentTheme = themes[0]?.id ?? 'default';
+  const engineThemeIds = new Set(listThemes().map((theme) => theme.id));
+  if (!engineThemeIds.has(currentPreset.engineTheme)) {
+    currentPreset = getThemePreset(null);
   }
 
   const accentInput = $<HTMLInputElement>('accent');
   const syncAccentSwatch = () => {
-    accentInput.value = currentAccent || themeAccents.get(currentTheme) || '#4c5bd4';
+    accentInput.value = currentAccent || currentPreset.accent;
   };
   accentInput.addEventListener('input', () => {
     currentAccent = accentInput.value;
@@ -219,15 +254,63 @@ async function boot(): Promise<void> {
     renderPreview();
   });
 
-  renderThemeSwitcher(themesEl, themes, currentTheme, (id) => {
-    currentTheme = id;
+  const renderQuickThemes = () => {
+    renderThemeSwitcher(themesEl, QUICK_THEME_PRESETS, currentPreset.id, (id) => {
+      selectTheme(getThemePreset(id));
+    });
+  };
+
+  const selectTheme = (preset: ThemePreset) => {
+    currentPreset = preset;
     currentAccent = ''; // 切換主題時重置為主題預設強調色
     saveAccent('');
-    saveTheme(id);
+    saveTheme(preset.id);
     syncAccentSwatch();
+    renderQuickThemes();
+    settingsController?.setTheme(preset.id);
     renderPreview();
+  };
+
+  const setBackground = (background: BackgroundStyle) => {
+    currentBackground = background;
+    saveBackground(background);
+    backgroundQuick.value = background;
+    settingsController?.setBackground(background);
+    renderPreview();
+  };
+
+  const setFontSize = (fontSize: FontSize) => {
+    currentFontSize = fontSize;
+    saveFontSize(fontSize);
+    settingsController?.setFontSize(fontSize);
+    renderPreview();
+  };
+
+  const backgroundQuick = $<HTMLSelectElement>('backgroundQuick');
+  backgroundQuick.value = currentBackground;
+  backgroundQuick.addEventListener('change', () => {
+    setBackground(backgroundQuick.value as BackgroundStyle);
   });
 
+  settingsController = createSettingsPanel(
+    {
+      themeId: currentPreset.id,
+      background: currentBackground,
+      fontSize: currentFontSize,
+      scrollSync: scrollSyncEnabled,
+    },
+    {
+      onTheme: selectTheme,
+      onBackground: setBackground,
+      onFontSize: setFontSize,
+      onScrollSync(enabled) {
+        scrollSyncEnabled = enabled;
+        saveScrollSync(enabled);
+      },
+    },
+  );
+
+  renderQuickThemes();
   syncAccentSwatch();
   renderPreview();
   editor.focus();

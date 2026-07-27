@@ -7,7 +7,14 @@ use crate::RenderOptions;
 /// 渲染。回傳 JSON：成功 `{"ok":true,"html":"…","footnotes":n}`，
 /// 失敗 `{"ok":false,"error":"…"}`。`accent` 空字串表示不覆寫。
 #[wasm_bindgen]
-pub fn wm_render(markdown: &str, theme_id: &str, external_footnotes: bool, accent: &str) -> String {
+pub fn wm_render(
+    markdown: &str,
+    theme_id: &str,
+    external_footnotes: bool,
+    accent: &str,
+    background: &str,
+    font_size: &str,
+) -> String {
     let opts = RenderOptions {
         external_links_as_footnotes: external_footnotes,
         accent: if accent.is_empty() {
@@ -15,6 +22,8 @@ pub fn wm_render(markdown: &str, theme_id: &str, external_footnotes: bool, accen
         } else {
             Some(accent.to_string())
         },
+        background: crate::BackgroundStyle::from(background),
+        font_size: crate::FontSize::from(font_size),
     };
     match crate::render(markdown, theme_id, &opts) {
         Ok(r) => format!(

@@ -52,11 +52,7 @@ fn every_theme_renders_square_paper_background() {
 #[test]
 fn background_styles_render_distinct_root_styles() {
     let cases = [
-        (
-            BackgroundStyle::Grid,
-            Some("background-color:#fff;"),
-            true,
-        ),
+        (BackgroundStyle::Grid, Some("background-color:#fff;"), true),
         (
             BackgroundStyle::Warm,
             Some("background-color:#fff8ee;"),

@@ -11,7 +11,7 @@ mod theme;
 #[cfg(target_arch = "wasm32")]
 mod wasm;
 
-pub use options::RenderOptions;
+pub use options::{BackgroundStyle, FontSize, RenderOptions};
 pub use theme::{Theme, ThemeMeta};
 
 /// 渲染結果。

@@ -14,10 +14,15 @@ export interface RenderResult {
   footnotes: number;
 }
 
+export type BackgroundStyle = 'warm' | 'grid' | 'none';
+export type FontSize = 'small' | 'medium' | 'large';
+
 export interface RenderOptions {
   externalFootnotes: boolean;
   /** 覆寫強調色；空字串表示用主題預設。 */
   accent: string;
+  background: BackgroundStyle;
+  fontSize: FontSize;
 }
 
 interface RawRender {
@@ -48,7 +53,14 @@ export function version(): string {
 }
 
 export function render(markdown: string, themeId: string, opts: RenderOptions): RenderResult {
-  const raw = wm_render(markdown, themeId, opts.externalFootnotes, opts.accent);
+  const raw = wm_render(
+    markdown,
+    themeId,
+    opts.externalFootnotes,
+    opts.accent,
+    opts.background,
+    opts.fontSize,
+  );
   const parsed = JSON.parse(raw) as RawRender;
   if (!parsed.ok) {
     throw new Error(parsed.error ?? 'render failed');

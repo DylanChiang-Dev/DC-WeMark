@@ -120,6 +120,32 @@ test('font size and scroll sync preferences persist', async ({ page }) => {
   await expect(page.getByRole('switch', { name: '雙向捲動同步' })).not.toBeChecked();
 });
 
+test('scroll sync follows in both directions', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });
+
+  const markdown = Array.from(
+    { length: 70 },
+    (_, index) => `## 段落 ${index + 1}\n\n這是一段用來驗證同步捲動的內容。`,
+  ).join('\n\n');
+  const editor = page.locator('#editor');
+  const previewPane = page.locator('.pane--preview');
+  await editor.fill(markdown);
+  await expect(page.locator('#preview h2')).toHaveCount(70);
+
+  await editor.evaluate((element) => {
+    element.scrollTop = element.scrollHeight;
+    element.dispatchEvent(new Event('scroll'));
+  });
+  await expect.poll(() => previewPane.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+
+  await previewPane.evaluate((element) => {
+    element.scrollTop = 0;
+    element.dispatchEvent(new Event('scroll'));
+  });
+  await expect.poll(() => editor.evaluate((element) => element.scrollTop)).toBe(0);
+});
+
 test('word count reflects editor content', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });
