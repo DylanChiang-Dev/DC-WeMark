@@ -1,14 +1,14 @@
 /* DC-WeMark 應用外殼樣式（工具本身的 UI，與文章主題無關）。 */
 
 :root {
-  --accent: #4c5bd4;
-  --accent-weak: #eef0fb;
+  --accent: #1677ff;
+  --accent-weak: #eaf2ff;
   --ink: #23262e;
   --ink-soft: #5b616e;
   --ink-faint: #9aa0ab;
   --line: #e7e9ef;
   --surface: #ffffff;
-  --canvas: #f4f5f8;
+  --canvas: #eef0f4;
   --editor-bg: #fbfbfd;
 
   --radius: 10px;
@@ -72,7 +72,7 @@ body {
   font-size: 20px;
   font-weight: 700;
   color: #fff;
-  background: linear-gradient(135deg, var(--accent), #6f7ce6);
+  background: linear-gradient(135deg, #1677ff, #6f5df6 52%, #ef5b9c);
   border-radius: 11px;
   box-shadow: var(--shadow-sm);
 }
@@ -216,11 +216,11 @@ body {
 .btn--primary {
   color: #fff;
   background: var(--accent);
-  box-shadow: 0 4px 14px rgba(76, 91, 212, 0.32);
+  box-shadow: 0 4px 14px rgba(22, 119, 255, 0.28);
 }
 
 .btn--primary:hover {
-  background: #4150c4;
+  background: #0f63d7;
 }
 
 /* 只在窄螢幕顯示的「切換預覽」按鈕 */
@@ -300,7 +300,7 @@ body {
 }
 
 .preview {
-  padding: 22px 20px;
+  padding: 18px 16px;
 }
 
 /* ---------- Statusbar ---------- */
@@ -857,11 +857,11 @@ body {
 }
 
 .background-option__preview.is-warm {
-  background: #fff8ee;
+  background: #f7f7f5;
 }
 
 .background-option__preview.is-grid {
-  background-color: #fff;
+  background-color: #f7f7f5;
   background-image: linear-gradient(rgba(47, 54, 64, 0.1) 1px, transparent 1px),
     linear-gradient(90deg, rgba(47, 54, 64, 0.1) 1px, transparent 1px);
   background-size: 9px 9px;

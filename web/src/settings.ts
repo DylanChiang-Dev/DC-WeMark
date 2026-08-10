@@ -1,11 +1,5 @@
 import type { BackgroundStyle, FontFamily, FontSize } from './engine.js';
-import {
-  getThemePreset,
-  THEME_PRESETS,
-  themesInGroup,
-  type ThemeGroup,
-  type ThemePreset,
-} from './theme-presets.js';
+import { getThemePreset, THEME_PRESETS, type ThemePreset } from './theme-presets.js';
 
 interface SettingsState {
   themeId: string;
@@ -36,13 +30,13 @@ export interface SettingsController {
 
 const ACCENT_PRESETS = [
   { name: '主題色', value: '' },
-  { name: '霧銀', value: '#49647a' },
-  { name: '躍藍', value: '#1673d1' },
-  { name: '墨黑', value: '#20242b' },
-  { name: '松青', value: '#0f766e' },
-  { name: '珊瑚', value: '#c2414d' },
-  { name: '琥珀', value: '#9a5a12' },
-  { name: '葡萄', value: '#6f4a91' },
+  { name: '藍色', value: '#2563eb' },
+  { name: '青綠', value: '#0f766e' },
+  { name: '墨色', value: '#20242b' },
+  { name: '珊瑚紅', value: '#dc4c64' },
+  { name: '琥珀色', value: '#b7791f' },
+  { name: '紫色', value: '#7c3aed' },
+  { name: '橙色', value: '#ea580c' },
 ] as const;
 
 const byId = <T extends HTMLElement>(id: string): T => {
@@ -66,7 +60,6 @@ export function createSettingsPanel(
   const scrollSync = byId<HTMLInputElement>('scrollSync');
   const fontSizeGroup = byId<HTMLElement>('fontSizeGroup');
   const fontFamilyGroup = byId<HTMLElement>('fontFamilyGroup');
-  let activeGroup: ThemeGroup = 'native';
   let state = { ...initial };
 
   const close = () => {
@@ -99,7 +92,7 @@ export function createSettingsPanel(
 
   const renderGallery = () => {
     gallery.replaceChildren();
-    for (const preset of themesInGroup(activeGroup)) {
+    for (const preset of THEME_PRESETS) {
       const option = document.createElement('button');
       option.type = 'button';
       option.className = 'theme-option';
@@ -188,18 +181,6 @@ export function createSettingsPanel(
     });
     accentOptions.append(custom);
   };
-
-  for (const tab of panel.querySelectorAll<HTMLButtonElement>('[data-theme-group]')) {
-    tab.addEventListener('click', () => {
-      activeGroup = tab.dataset.themeGroup as ThemeGroup;
-      for (const item of panel.querySelectorAll<HTMLElement>('[data-theme-group]')) {
-        const selected = item === tab;
-        item.classList.toggle('is-active', selected);
-        item.setAttribute('aria-selected', String(selected));
-      }
-      renderGallery();
-    });
-  }
 
   for (const input of panel.querySelectorAll<HTMLInputElement>('input[name="backgroundStyle"]')) {
     input.addEventListener('change', () => {

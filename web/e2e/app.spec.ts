@@ -33,29 +33,23 @@ test('switching theme changes preview styling', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });
   const pills = page.locator('.theme-pill');
-  const count = await pills.count();
-  expect(count).toBeGreaterThan(0);
-  const rootStyleBefore = await page.locator('#preview > section').getAttribute('style');
-  if (count > 1) {
-    await pills.nth(1).click();
-    const rootStyleAfter = await page.locator('#preview > section').getAttribute('style');
-    expect(rootStyleAfter).not.toEqual(rootStyleBefore);
-  }
+  await expect(pills).toHaveCount(1);
+  await expect(pills.first()).toHaveText('蘋果風');
+  await expect(pills.first()).toHaveAttribute('aria-selected', 'true');
 });
 
-test('all themes render a square-paper article background', async ({ page }) => {
+test('Apple theme renders soft white by default and keeps grid optional', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });
 
   const article = page.locator('#preview > section');
-  const themes = page.locator('.theme-pill');
-  const themeCount = await themes.count();
-  for (let index = 0; index < themeCount; index += 1) {
-    await themes.nth(index).click();
-    await expect(article).toHaveCSS('background-image', /linear-gradient/);
-    // WebKit collapses identical per-layer background sizes into one computed value.
-    await expect(article).toHaveCSS('background-size', /^24px 24px(?:, 24px 24px)?$/);
-  }
+  await expect(article).toHaveCSS('background-color', 'rgb(247, 247, 245)');
+  await expect(article).toHaveCSS('background-image', 'none');
+
+  const background = page.getByLabel('複製背景');
+  await background.selectOption('grid');
+  await expect(article).toHaveCSS('background-image', /linear-gradient/);
+  await expect(article).toHaveCSS('background-size', /^24px 24px(?:, 24px 24px)?$/);
   await expect(page.locator('#editor')).toHaveCSS('background-image', 'none');
 });
 
@@ -65,11 +59,11 @@ test('background style can switch between grid, warm, and none', async ({ page }
 
   const background = page.getByLabel('複製背景');
   const article = page.locator('#preview > section');
-  await expect(background).toHaveValue('grid');
+  await expect(background).toHaveValue('warm');
 
   await background.selectOption('warm');
   await expect(article).toHaveCSS('background-image', 'none');
-  await expect(article).toHaveCSS('background-color', 'rgb(255, 248, 238)');
+  await expect(article).toHaveCSS('background-color', 'rgb(247, 247, 245)');
 
   await background.selectOption('none');
   await expect(article).toHaveCSS('background-image', 'none');
@@ -81,44 +75,81 @@ test('background style can switch between grid, warm, and none', async ({ page }
   await expect(article).toHaveCSS('background-image', 'none');
 });
 
-test('settings expose 48 original theme presets', async ({ page }) => {
+test('appearance migration runs once and preserves draft and scroll sync', async ({ page }) => {
+  await page.addInitScript(() => {
+    if (localStorage.getItem('wemark:test-migration-seeded')) return;
+    localStorage.setItem('wemark:test-migration-seeded', 'true');
+    localStorage.setItem('wemark:draft:v1', '# 保留的草稿');
+    localStorage.setItem('wemark:theme:v1', 'mist');
+    localStorage.setItem('wemark:accent:v1', '#ff0066');
+    localStorage.setItem('wemark:background:v1', 'grid');
+    localStorage.setItem('wemark:font-size:v1', 'small');
+    localStorage.setItem('wemark:font-family:v1', 'serif');
+    localStorage.setItem('wemark:scroll-sync:v1', 'false');
+  });
+
+  await page.goto('/');
+  await expect(page.locator('#preview h1')).toHaveText('保留的草稿');
+  await expect(page.locator('#preview > section')).toHaveCSS(
+    'background-color',
+    'rgb(247, 247, 245)',
+  );
+  await page.getByRole('button', { name: '排版設定' }).click();
+  await expect(page.getByRole('dialog', { name: '排版設定' })).toBeVisible();
+  await expect(page.getByRole('switch', { name: '雙向捲動同步' })).not.toBeChecked();
+
+  const migrated = await page.evaluate(() => ({
+    migration: localStorage.getItem('wemark:appearance-migration:v2'),
+    theme: localStorage.getItem('wemark:theme:v1'),
+    accent: localStorage.getItem('wemark:accent:v1'),
+    background: localStorage.getItem('wemark:background:v1'),
+    fontSize: localStorage.getItem('wemark:font-size:v1'),
+    fontFamily: localStorage.getItem('wemark:font-family:v1'),
+    draft: localStorage.getItem('wemark:draft:v1'),
+    scrollSync: localStorage.getItem('wemark:scroll-sync:v1'),
+  }));
+  expect(migrated).toEqual({
+    migration: 'v2',
+    theme: null,
+    accent: null,
+    background: null,
+    fontSize: null,
+    fontFamily: null,
+    draft: '# 保留的草稿',
+    scrollSync: 'false',
+  });
+
+  await page.getByRole('button', { name: '關閉排版設定' }).click();
+  await page.locator('#accent').evaluate((el) => {
+    const input = el as HTMLInputElement;
+    input.value = '#ff0066';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  await page.reload();
+  await expect(page.locator('#accent')).toHaveValue('#ff0066');
+  await expect(page.locator('#editor')).toHaveValue('# 保留的草稿');
+});
+
+test('settings expose only the completed Apple theme', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });
   await page.getByRole('button', { name: '排版設定' }).click();
 
   const panel = page.getByRole('dialog', { name: '排版設定' });
   await expect(panel).toBeVisible();
-  await expect(panel.locator('#themeTotal')).toHaveText('48');
-  await expect(panel.locator('.theme-option')).toHaveCount(6);
-  await expect(panel.locator('.theme-option__palette > span')).toHaveCount(18);
+  await expect(panel.locator('#themeTotal')).toHaveText('1');
+  await expect(panel.locator('.theme-option')).toHaveCount(1);
+  await expect(panel.locator('.theme-option__palette > span')).toHaveCount(3);
   const themeGallery = panel.locator('#themeGallery');
-  const mist = themeGallery.getByRole('button', { name: /霧銀/ });
-  const pulse = themeGallery.getByRole('button', { name: /躍藍/ });
-  await expect(mist).toBeVisible();
-  await expect(pulse).toBeVisible();
-
-  await pulse.click();
-  await expect(panel.locator('#currentThemeName')).toHaveText('躍藍');
-  await expect(page.locator('#preview h1')).toHaveAttribute(
+  await expect(themeGallery.getByRole('button', { name: /蘋果風/ })).toBeVisible();
+  await expect(panel.locator('[data-theme-group]')).toHaveCount(0);
+  await expect(panel.locator('text=霧銀')).toHaveCount(0);
+  await expect(panel.locator('text=躍藍')).toHaveCount(0);
+  await expect(panel.locator('#currentThemeName')).toHaveText('蘋果風');
+  await expect(page.locator('#preview h2').first()).toHaveAttribute(
     'style',
-    /border-left:5px solid #1673d1/i,
+    /linear-gradient\(135deg,#1677ff/i,
   );
-
-  await mist.click();
-  await expect(panel.locator('#currentThemeName')).toHaveText('霧銀');
-  await expect(page.locator('#preview h1')).toHaveAttribute(
-    'style',
-    /border-bottom:1px solid #49647a/i,
-  );
-
-  await panel.getByRole('tab', { name: /精選/ }).click();
-  await expect(panel.locator('.theme-option')).toHaveCount(10);
-  await panel.getByRole('tab', { name: /模板/ }).click();
-  await expect(panel.locator('.theme-option')).toHaveCount(32);
-
-  await panel.locator('[data-theme-id="airy-blue"]').click();
-  await expect(panel.locator('#currentThemeName')).toHaveText('留白藍');
-  await expect(page.locator('#preview h1')).toHaveAttribute('style', /#2563eb/i);
 });
 
 test('font size and scroll sync preferences persist', async ({ page }) => {
@@ -155,8 +186,12 @@ test('font and named accent choices are visual and persist', async ({ page }) =>
 
   const accentPresets = page.getByRole('group', { name: '強調色' });
   await expect(page.locator('#accent')).toHaveAttribute('type', 'color');
-  await accentPresets.getByRole('button', { name: '躍藍' }).click();
-  await expect(page.locator('#preview h2').first()).toHaveAttribute('style', /#1673d1/i);
+  await accentPresets.getByRole('button', { name: '藍色' }).click();
+  await expect(page.locator('#preview strong').first()).toHaveAttribute('style', /#2563eb/i);
+  await expect(page.locator('#preview h2').first()).toHaveAttribute(
+    'style',
+    /linear-gradient\(135deg,#1677ff/i,
+  );
 
   await page.reload();
   await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });
@@ -169,7 +204,7 @@ test('font and named accent choices are visual and persist', async ({ page }) =>
     'aria-pressed',
     'true',
   );
-  await expect(accentPresets.getByRole('button', { name: '躍藍' })).toHaveAttribute(
+  await expect(accentPresets.getByRole('button', { name: '藍色' })).toHaveAttribute(
     'aria-pressed',
     'true',
   );
@@ -250,13 +285,47 @@ test('standard Markdown is the only visible authoring path', async ({ page }) =>
   await expect(page.locator('#editor')).toHaveValue(/- \[x\]/);
 });
 
+test('Apple Markdown fixture fits phone and wide previews', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });
+  await page.locator('#editor').fill(
+    '# 蘋果風驗收\n\n'
+      + '## 章節標題\n\n'
+      + '段落 **重點**、*斜體*、~~刪除~~ 與 [連結](https://example.com)。\n\n'
+      + '> 引用內容\n\n'
+      + '- 清單一\n- [x] 已完成\n\n'
+      + '1. 有序一\n2. 有序二\n\n'
+      + '| 欄位 | 值 |\n| --- | --- |\n| A | B |\n\n'
+      + '`行內碼`\n\n```rust\nfn main() {}\n```\n\n---\n\n'
+      + '![測試圖片](data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=)',
+  );
+  await expect(page.locator('#preview h2')).toHaveAttribute('style', /linear-gradient/);
+  await expect(page.locator('#preview img')).toHaveAttribute('style', /box-shadow/);
+
+  const phoneMetrics = await page.locator('#preview').evaluate((article) => ({
+    width: article.clientWidth,
+    scrollWidth: article.scrollWidth,
+    imageWidth: article.querySelector('img')?.getBoundingClientRect().width ?? 0,
+  }));
+  expect(phoneMetrics.scrollWidth).toBeLessThanOrEqual(phoneMetrics.width);
+  expect(phoneMetrics.imageWidth).toBeLessThanOrEqual(phoneMetrics.width);
+
+  await page.getByRole('button', { name: '寬版' }).click();
+  await expect(page.locator('#phone')).toHaveClass(/is-wide/);
+  const wideMetrics = await page.locator('#preview').evaluate((article) => ({
+    width: article.clientWidth,
+    scrollWidth: article.scrollWidth,
+  }));
+  expect(wideMetrics.scrollWidth).toBeLessThanOrEqual(wideMetrics.width);
+});
+
 test('copy writes text/html to the clipboard', async ({ page, context, browserName }) => {
   test.skip(browserName === 'webkit', 'WebKit blocks clipboard read in automation');
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   await page.goto('/');
   await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });
   await page.locator('#editor').fill(
-    '# 複製測試\n\n> 引用\n\n- [x] 任務\n\n| 欄位 | 值 |\n|---|---|\n| A | B |\n',
+    '# 複製測試\n\n## 章節\n\n> 引用\n\n- [x] 任務\n\n| 欄位 | 值 |\n|---|---|\n| A | B |\n',
   );
   await page.locator('#copyBtn').click();
   await expect(page.locator('#toast')).toHaveClass(/is-show/);
@@ -264,8 +333,8 @@ test('copy writes text/html to the clipboard', async ({ page, context, browserNa
   const html = await readClipboardHtml(page);
   expect(html).toContain('<section');
   expect(html).toContain('複製測試');
-  expect(html).toContain('background-image:linear-gradient');
-  expect(html).toContain('background-size:24px 24px');
+  expect(html).toContain('background-color:#f7f7f5');
+  expect(html).toContain('background:linear-gradient(135deg,#1677ff');
   expect(html).not.toContain('class=');
   expect(html).not.toContain('<style');
   expect(html).not.toContain('<script');
@@ -279,5 +348,6 @@ test('copy writes text/html to the clipboard', async ({ page, context, browserNa
   await page.locator('#copyBtn').click();
   await expect.poll(() => readClipboardHtml(page)).not.toContain('background-image:');
   const plainHtml = await readClipboardHtml(page);
+  expect(plainHtml).toContain('background:linear-gradient(135deg,#1677ff');
   expect(plainHtml).not.toContain('background-size:');
 });

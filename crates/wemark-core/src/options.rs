@@ -2,8 +2,8 @@
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum BackgroundStyle {
-    Warm,
     #[default]
+    Warm,
     Grid,
     None,
 }
@@ -13,7 +13,8 @@ impl From<&str> for BackgroundStyle {
         match value {
             "warm" => Self::Warm,
             "none" => Self::None,
-            _ => Self::Grid,
+            "grid" => Self::Grid,
+            _ => Self::Warm,
         }
     }
 }
@@ -21,8 +22,8 @@ impl From<&str> for BackgroundStyle {
 impl BackgroundStyle {
     pub(crate) fn css(self) -> &'static str {
         match self {
-            Self::Warm => "background-color:#fff8ee;",
-            Self::Grid => "background-color:#fff;background-image:linear-gradient(rgba(47,54,64,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(47,54,64,0.05) 1px,transparent 1px);background-size:24px 24px;",
+            Self::Warm => "background-color:#f7f7f5;",
+            Self::Grid => "background-color:#f7f7f5;background-image:linear-gradient(rgba(44,44,46,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(44,44,46,0.05) 1px,transparent 1px);background-size:24px 24px;",
             Self::None => "",
         }
     }
@@ -50,8 +51,8 @@ impl FontSize {
     pub(crate) fn delta_px(self) -> i16 {
         match self {
             Self::Small => -2,
-            Self::Medium => -1,
-            Self::Large => 0,
+            Self::Medium => 0,
+            Self::Large => 2,
         }
     }
 }

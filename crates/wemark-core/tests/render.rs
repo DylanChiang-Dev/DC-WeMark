@@ -19,43 +19,29 @@ fn wraps_in_root_section_with_styles() {
 }
 
 #[test]
-fn every_theme_renders_square_paper_background() {
-    for theme in wemark_core::themes() {
-        let html = render("手帳內文", theme.meta.id, &RenderOptions::default())
-            .unwrap_or_else(|_| panic!("theme {} failed to render", theme.meta.id))
-            .html;
-        let root_tag = html.split_once('>').expect("root tag closes").0;
+fn only_apple_theme_renders_soft_white_by_default() {
+    let themes = wemark_core::themes();
+    assert_eq!(themes.len(), 1, "only one public theme should remain");
+    assert_eq!(themes[0].meta.id, "default");
+    assert_eq!(themes[0].meta.name, "蘋果風");
 
-        assert!(
-            root_tag.contains("background-color:#fff;"),
-            "theme {} root should have a paper color: {root_tag}",
-            theme.meta.id
-        );
-        assert!(
-            root_tag.contains("background-image:linear-gradient("),
-            "theme {} root should render grid lines: {root_tag}",
-            theme.meta.id
-        );
-        assert!(
-            root_tag.contains("background-size:24px 24px;"),
-            "theme {} root should use a stable square grid: {root_tag}",
-            theme.meta.id
-        );
-        assert!(
-            root_tag.contains("padding:24px 20px;"),
-            "theme {} root should keep text clear of the paper edge: {root_tag}",
-            theme.meta.id
-        );
-    }
+    let html = r("手帳內文");
+    let root_tag = html.split_once('>').expect("root tag closes").0;
+    assert!(root_tag.contains("background-color:#f7f7f5;"), "{root_tag}");
+    assert!(root_tag.contains("padding:24px 20px;"), "{root_tag}");
 }
 
 #[test]
 fn background_styles_render_distinct_root_styles() {
     let cases = [
-        (BackgroundStyle::Grid, Some("background-color:#fff;"), true),
+        (
+            BackgroundStyle::Grid,
+            Some("background-color:#f7f7f5;"),
+            true,
+        ),
         (
             BackgroundStyle::Warm,
-            Some("background-color:#fff8ee;"),
+            Some("background-color:#f7f7f5;"),
             false,
         ),
         (BackgroundStyle::None, None, false),
@@ -91,9 +77,9 @@ fn background_styles_render_distinct_root_styles() {
 #[test]
 fn font_size_scales_body_and_headings() {
     let cases = [
-        (FontSize::Small, "font-size:14px;", "font-size:21px;"),
-        (FontSize::Medium, "font-size:15px;", "font-size:22px;"),
-        (FontSize::Large, "font-size:16px;", "font-size:23px;"),
+        (FontSize::Small, "font-size:14px;", "font-size:26px;"),
+        (FontSize::Medium, "font-size:16px;", "font-size:28px;"),
+        (FontSize::Large, "font-size:18px;", "font-size:30px;"),
     ];
 
     for (font_size, body_size, heading_size) in cases {
@@ -283,30 +269,30 @@ fn themes_list_contains_default() {
 }
 
 #[test]
-fn original_cool_themes_have_distinct_complete_palettes() {
-    let cases = [
-        ("mist", "#49647a", "border-bottom:1px solid #49647a"),
-        ("pulse", "#1673d1", "background:#e9f7f7"),
-    ];
+fn apple_theme_has_fixed_gradient_and_custom_accent_details() {
+    let html = render(
+        "# 一級標題\n\n## 二級標題\n\n> 引用\n\n**重點**",
+        "default",
+        &RenderOptions {
+            accent: Some("#ff0066".to_string()),
+            ..RenderOptions::default()
+        },
+    )
+    .expect("apple theme renders")
+    .html;
 
-    for (theme_id, accent, signature) in cases {
-        let html = render(
-            "# 一級標題\n\n## 二級標題\n\n> 引用\n\n**重點**",
-            theme_id,
-            &RenderOptions::default(),
-        )
-        .unwrap_or_else(|_| panic!("theme {theme_id} failed to render"))
-        .html;
-
-        assert!(
-            html.contains(accent),
-            "{theme_id} should use its own accent"
-        );
-        assert!(
-            html.contains(signature),
-            "{theme_id} should expose its own visual signature: {html}"
-        );
-    }
+    assert!(
+        html.contains("background:linear-gradient(135deg,#1677ff 0%,#6f5df6 52%,#ef5b9c 100%);"),
+        "h2 should keep the Apple signature gradient: {html}"
+    );
+    assert!(
+        html.contains("color:#ff0066;"),
+        "custom accent should apply: {html}"
+    );
+    assert!(
+        !html.contains("background:linear-gradient(135deg,#ff0066"),
+        "custom accent must not replace the signature gradient: {html}"
+    );
 }
 
 #[test]
@@ -354,11 +340,7 @@ fn every_theme_renders_rich_doc_without_forbidden() {
               - a\n- b\n\n1. 一\n2. 二\n\n\
               ```rust\nfn main() {}\n```\n\n---\n";
     let themes = wemark_core::themes();
-    assert!(
-        themes.len() >= 4,
-        "expected >=4 themes, got {}",
-        themes.len()
-    );
+    assert_eq!(themes.len(), 1, "only the Apple theme should be public");
     for t in themes {
         let html = render(md, t.meta.id, &RenderOptions::default())
             .unwrap_or_else(|_| panic!("theme {} failed to render", t.meta.id))

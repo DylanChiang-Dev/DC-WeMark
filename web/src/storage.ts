@@ -9,6 +9,29 @@ const BACKGROUND_KEY = 'wemark:background:v1';
 const FONT_SIZE_KEY = 'wemark:font-size:v1';
 const FONT_FAMILY_KEY = 'wemark:font-family:v1';
 const SCROLL_SYNC_KEY = 'wemark:scroll-sync:v1';
+const APPEARANCE_MIGRATION_KEY = 'wemark:appearance-migration:v2';
+
+/**
+ * v2 只清理外觀偏好，保留草稿與同步捲動，並以版本鍵確保只執行一次。
+ * 舊主題識別字由 theme-presets 做相容導向；清理偏好可避免舊色彩污染新主題。
+ */
+export function migrateAppearancePreferences(): void {
+  try {
+    if (localStorage.getItem(APPEARANCE_MIGRATION_KEY) === 'v2') return;
+    for (const key of [
+      THEME_KEY,
+      ACCENT_KEY,
+      BACKGROUND_KEY,
+      FONT_SIZE_KEY,
+      FONT_FAMILY_KEY,
+    ]) {
+      localStorage.removeItem(key);
+    }
+    localStorage.setItem(APPEARANCE_MIGRATION_KEY, 'v2');
+  } catch {
+    // 忽略（隱私模式 / 配額）；下次載入仍會嘗試遷移。
+  }
+}
 
 export function loadDraft(): string | null {
   try {
@@ -71,9 +94,9 @@ export function saveAccent(accent: string): void {
 export function loadBackground(): BackgroundStyle {
   try {
     const value = localStorage.getItem(BACKGROUND_KEY);
-    return value === 'warm' || value === 'none' ? value : 'grid';
+    return value === 'warm' || value === 'grid' || value === 'none' ? value : 'warm';
   } catch {
-    return 'grid';
+    return 'warm';
   }
 }
 

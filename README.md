@@ -37,7 +37,7 @@ DC-WeMark 要解決的就是這一段：**寫作用你熟悉的 Markdown，發�
 - **純前端，無後端。** 沒有伺服器邏輯、沒有資料庫、沒有帳號系統。部署產物就是一包靜態檔案。
 - **內容不出裝置。** 從輸入 Markdown 到複製 HTML，每一步都在瀏覽器本地執行；斷網也能用。
 - **不做全家桶。** 只做一件事：排版、預覽、複製。不接 AI 寫作、不管你的公眾號帳號、不碰發布 API。
-- **主題全部原創。** 每一套主題的配色、字距、版式都是本專案自己設計的。
+- **目前只保留一套精修主題。** 蘋果風的配色、字距、版式都是本專案獨立設計；後續完成並驗收一套，再新增下一套。
 
 ## 🗺️ 工作原理
 
@@ -60,12 +60,14 @@ flowchart LR
 | 雙欄編輯器 | 左側 Markdown 輸入，右側公眾號樣式即時預覽（含拖分隔線、手機/寬版切換） | ✅ 完成 |
 | 排版引擎 | CommonMark + GFM（表格、程式碼區塊、任務清單），輸出公眾號相容的 inline-styled HTML | ✅ 完成 |
 | 一鍵複製 | 以 `text/html` 寫入剪貼簿（含 Safari 相容路徑），貼進公眾號編輯器保留全部樣式 | ✅ 完成 |
-| 原創主題 | 48 款原創預設可切換，涵蓋原生、精選與模板主題，並支援自訂強調色 | ✅ 完成 |
+| 原創主題 | 目前唯一的蘋果風精修主題，支援自訂強調色 | ✅ 完成 |
 | 排版設定 | 三種複製背景、三檔字號、四種文章字體、視覺選色、雙向捲動同步與偏好儲存 | ✅ 完成 |
 | 編輯體驗 | 字數統計、`.md` 匯入／匯出、Tab 縮排、`Cmd/Ctrl+B/I`、拖入檔案、本地草稿 | ✅ 完成 |
 | 程式碼高亮 | 語法 token 上色（可選 feature；預設關以控體積，見 [體積說明](docs/size-baseline.md)） | 🚧 opt-in |
 
 新文章使用標準 Markdown 即可。舊文稿中的 `:::` 容器語法仍可正常渲染，但僅作向後相容，不再提供插入入口或擴充新模組（見[相容說明](docs/container-syntax.md)）。
+
+主題開發採逐套完成、逐套驗收的節奏：蘋果風先通過實際微信編輯器貼上驗收，再開始下一套主題。
 
 ## 🚀 快速開始
 
@@ -131,7 +133,7 @@ Cloudflare Pages 直接連接 GitHub 倉庫 `DylanChiang-Dev/DC-WeMark`：
 
 - [x] **0.1.0** — 排版引擎 MVP：Markdown → 公眾號相容 HTML，含 1 套預設主題
 - [x] **0.2.0** — 雙欄編輯器 + 即時預覽 + 一鍵複製
-- [x] **0.3.0** — 多主題系統與主題切換 + 自訂強調色
+- [x] **0.3.0** — 蘋果風主題與主題切換 + 自訂強調色
 - [x] **0.4.0** — 進階排版模組（現僅作舊文稿相容）
 - [x] **1.0.0** — Docker 自架方案 + Cloudflare Pages 部署流程
 
@@ -149,8 +151,8 @@ Cloudflare Pages 直接連接 GitHub 倉庫 `DylanChiang-Dev/DC-WeMark`：
 
 「Markdown 轉公眾號排版」是一個有眾多先行者的領域，特此致謝其中的開拓者：
 
-- [**doocs/md**](https://github.com/doocs/md) —— 網頁版微信 Markdown 編輯器的形態先例（MIT）
-- [**markdown-nice**](https://github.com/mdnice/markdown-nice) —— 主題化公眾號排版的理念方向（GPL-3.0）
-- [**md2wechat-skill**](https://github.com/geekjourneyx/md2wechat-skill) —— Markdown 排版工作流與公開功能邊界的參考（Source Available License）
+- [**md2wechat-skill**](https://github.com/geekjourneyx/md2wechat-skill) —— 本專案主要的功能與視覺對標；蘋果風樣稿特徵包括暖白圓角文章、亮藍重點、圖片陰影與藍紫紅漸層章節標題（Source Available License）
+- [**doocs/md**](https://github.com/doocs/md) —— 網頁版微信 Markdown 編輯器的次要形態參考（MIT）
+- [**markdown-nice**](https://github.com/mdnice/markdown-nice) —— 主題化公眾號排版的次要理念參考（GPL-3.0）
 
 > 僅參考公開功能邊界與問題意識，**程式碼、主題樣式、文案全部獨立原創**，未複製上述專案的原始碼或樣式。

@@ -29,6 +29,7 @@ import {
   loadFontSize,
   loadScrollSync,
   loadTheme,
+  migrateAppearancePreferences,
   saveAccent,
   saveBackground,
   saveFontFamily,
@@ -53,6 +54,8 @@ const wordcountEl = $('wordcount');
 const toastEl = $('toast');
 const fileInput = $<HTMLInputElement>('fileInput');
 const appEl = document.querySelector<HTMLElement>('.app')!;
+
+migrateAppearancePreferences();
 
 let currentPreset = getThemePreset(loadTheme());
 let currentAccent = loadAccent(); // 空 = 用主題預設

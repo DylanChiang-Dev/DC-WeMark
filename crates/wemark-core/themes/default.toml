@@ -1,88 +1,91 @@
-# 晴川 — DC-WeMark 預設主題
-# 原創設計：靛藍點綴、克制留白，適合技術與生活類長文。
+# 蘋果風 — DC-WeMark 唯一精修主題
+# clean-room 原創：暖白留白、亮藍重點與固定藍紫紅章節標題。
 # 所有樣式最終會被內聯到每個元素上（微信公眾號編輯器只吃 inline style）。
 
 [meta]
 id = "default"
-name = "晴川"
-description = "簡潔清爽的預設主題，靛藍點綴，適合大多數技術與生活類文章。"
-accent = "#4c5bd4"
+name = "蘋果風"
+description = "暖白留白、亮藍重點與漸層章節標題，適合大多數文章。"
+accent = "#1677ff"
 
-# 可被其他樣式以 {{name}} 引用的調色盤變數。
-# {{accent}} 是保留變數，於執行期替換（供未來自訂強調色）。
 [palette]
-text = "#2f3640"
-muted = "#9aa0ab"
-border = "#ececf2"
-code-bg = "#f6f7f9"
-quote-bg = "#f7f8fc"
-quote-text = "#5b616e"
-th-bg = "#f4f5f8"
-inline-code-text = "#d6336c"
+text = "#2c2c2e"
+muted = "#68686b"
+border = "#dedee3"
+code-bg = "#f0f1f5"
+quote-bg = "#f1f5fa"
+quote-text = "#515154"
+table-head = "#eef3fb"
+inline-code-text = "#b4235d"
+image-bg = "#ffffff"
 
-# 根容器：整篇文章的基準字型與行高。
 [root]
 font-family = "-apple-system, BlinkMacSystemFont, \"Segoe UI\", \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", Arial, sans-serif"
 font-size = "16px"
-line-height = "1.75"
+line-height = "1.9"
 color = "{{text}}"
-letter-spacing = "0.4px"
+letter-spacing = "1px"
 word-break = "break-word"
 
 [elements.h1]
-font-size = "23px"
+font-size = "28px"
 font-weight = "700"
 color = "{{text}}"
-line-height = "1.4"
-margin = "34px 0 18px"
-padding-bottom = "10px"
+line-height = "1.3"
+margin = "18px 0 24px"
+padding-bottom = "14px"
 border-bottom = "2px solid {{accent}}"
+letter-spacing = "0.4px"
 
 [elements.h2]
 font-size = "20px"
 font-weight = "700"
-color = "{{text}}"
+color = "#ffffff"
 line-height = "1.4"
-margin = "30px 0 16px"
-padding-left = "10px"
-border-left = "4px solid {{accent}}"
+margin = "34px 0 18px"
+padding = "8px 14px"
+background = "linear-gradient(135deg,#1677ff 0%,#6f5df6 52%,#ef5b9c 100%)"
+border-radius = "10px"
+letter-spacing = "0.4px"
 
 [elements.h3]
 font-size = "18px"
-font-weight = "600"
+font-weight = "700"
 color = "{{text}}"
 line-height = "1.5"
-margin = "24px 0 12px"
+margin = "28px 0 14px"
+padding-left = "10px"
+border-left = "3px solid {{accent}}"
 
 [elements.h4]
-font-size = "16px"
-font-weight = "600"
+font-size = "17px"
+font-weight = "700"
 color = "{{accent}}"
-line-height = "1.5"
-margin = "20px 0 10px"
+line-height = "1.55"
+margin = "24px 0 12px"
 
 [elements.h5]
-font-size = "15px"
-font-weight = "600"
+font-size = "16px"
+font-weight = "700"
 color = "{{text}}"
-line-height = "1.5"
-margin = "16px 0 8px"
+line-height = "1.55"
+margin = "20px 0 10px"
 
 [elements.h6]
-font-size = "14px"
-font-weight = "600"
+font-size = "15px"
+font-weight = "700"
 color = "{{muted}}"
-line-height = "1.5"
-margin = "14px 0 7px"
+line-height = "1.6"
+margin = "18px 0 8px"
 
 [elements.p]
-margin = "16px 0"
-line-height = "1.75"
+margin = "18px 0"
+line-height = "1.9"
 color = "{{text}}"
 
 [elements.strong]
 font-weight = "700"
-color = "{{text}}"
+color = "{{accent}}"
 
 [elements.em]
 font-style = "italic"
@@ -94,67 +97,72 @@ text-decoration = "line-through"
 
 [elements.a]
 color = "{{accent}}"
-font-weight = "500"
+font-weight = "600"
 text-decoration = "none"
 border-bottom = "1px solid {{accent}}"
 
 [elements.blockquote]
-margin = "18px 0"
-padding = "12px 16px"
+margin = "22px 0"
+padding = "14px 18px"
 color = "{{quote-text}}"
 background = "{{quote-bg}}"
 border-left = "4px solid {{accent}}"
-border-radius = "0 6px 6px 0"
+border-radius = "10px"
 
 [elements.ul]
-margin = "16px 0"
-padding-left = "1.4em"
+margin = "18px 0"
+padding-left = "1.5em"
 
 [elements.ol]
-margin = "16px 0"
-padding-left = "1.4em"
+margin = "18px 0"
+padding-left = "1.5em"
 
 [elements.li]
-margin = "6px 0"
-line-height = "1.75"
+margin = "8px 0"
+line-height = "1.9"
 color = "{{text}}"
 
 [elements.hr]
 height = "1px"
 border = "none"
 background = "{{border}}"
-margin = "28px 0"
+margin = "32px 0"
 
 [elements.img]
 display = "block"
 max-width = "100%"
 height = "auto"
-margin = "18px auto"
-border-radius = "6px"
+margin = "24px auto"
+padding = "6px"
+background = "{{image-bg}}"
+border-radius = "12px"
+box-shadow = "0 8px 24px rgba(44,44,46,0.12)"
 
 [elements.code-inline]
 font-family = "\"SFMono-Regular\", Consolas, Menlo, monospace"
 font-size = "90%"
 color = "{{inline-code-text}}"
 background = "{{code-bg}}"
-padding = "2px 6px"
-border-radius = "4px"
+padding = "3px 7px"
+border-radius = "6px"
+letter-spacing = "0"
 
 [elements.table]
 width = "100%"
 border-collapse = "collapse"
-margin = "18px 0"
+margin = "22px 0"
 font-size = "15px"
+color = "{{text}}"
 
 [elements.th]
-padding = "8px 12px"
-font-weight = "600"
+padding = "10px 12px"
+font-weight = "700"
 color = "{{text}}"
-background = "{{th-bg}}"
+background = "{{table-head}}"
 border = "1px solid {{border}}"
 
 [elements.td]
-padding = "8px 12px"
+padding = "10px 12px"
 color = "{{text}}"
 border = "1px solid {{border}}"
 
@@ -164,21 +172,21 @@ font-size = "12px"
 padding = "0 2px"
 
 [elements.footnote-section]
-margin = "32px 0 0"
-padding-top = "16px"
+margin = "36px 0 0"
+padding-top = "18px"
 border-top = "1px solid {{border}}"
 font-size = "14px"
 color = "{{muted}}"
 
 [elements.footnote-title]
-margin = "0 0 8px"
+margin = "0 0 10px"
 font-size = "15px"
-font-weight = "600"
+font-weight = "700"
 color = "{{text}}"
 
 [elements.footnote-item]
-margin = "4px 0"
-line-height = "1.6"
+margin = "5px 0"
+line-height = "1.7"
 word-break = "break-all"
 color = "{{muted}}"
 
@@ -188,12 +196,13 @@ theme = "InspiredGitHub"
 [code.block]
 font-family = "\"SFMono-Regular\", Consolas, Menlo, monospace"
 font-size = "14px"
-line-height = "1.6"
+line-height = "1.65"
 color = "{{text}}"
 background = "{{code-bg}}"
 padding = "16px"
-margin = "18px 0"
-border-radius = "8px"
+margin = "22px 0"
+border-radius = "10px"
 border = "1px solid {{border}}"
+box-shadow = "0 4px 14px rgba(44,44,46,0.06)"
 overflow-x = "auto"
 white-space = "pre"
