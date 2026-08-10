@@ -53,7 +53,8 @@ test('all themes render a square-paper article background', async ({ page }) => 
   for (let index = 0; index < themeCount; index += 1) {
     await themes.nth(index).click();
     await expect(article).toHaveCSS('background-image', /linear-gradient/);
-    await expect(article).toHaveCSS('background-size', '24px 24px, 24px 24px');
+    // WebKit collapses identical per-layer background sizes into one computed value.
+    await expect(article).toHaveCSS('background-size', /^24px 24px(?:, 24px 24px)?$/);
   }
   await expect(page.locator('#editor')).toHaveCSS('background-image', 'none');
 });
