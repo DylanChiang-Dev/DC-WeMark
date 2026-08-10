@@ -207,6 +207,26 @@ test('word count reflects editor content', async ({ page }) => {
   await expect(page.locator('#wordcount')).toHaveText('4 字');
 });
 
+test('footer shows copyright and author links', async ({ page }) => {
+  await page.goto('/');
+
+  const copyright = page.getByLabel('版權與作者連結');
+  await expect(copyright).toContainText('© 2026 Dylan Chiang');
+  await expect(copyright.getByRole('link', { name: '個人首頁' })).toHaveAttribute(
+    'href',
+    'https://dc.caiada.edu.kg/',
+  );
+  await expect(copyright.getByRole('link', { name: 'GitHub' })).toHaveAttribute(
+    'href',
+    'https://github.com/DylanChiang-Dev',
+  );
+
+  for (const link of await copyright.getByRole('link').all()) {
+    await expect(link).toHaveAttribute('target', '_blank');
+    await expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+  }
+});
+
 test('custom accent persists across reload', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });

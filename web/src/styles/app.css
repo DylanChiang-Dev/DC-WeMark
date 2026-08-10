@@ -319,6 +319,35 @@ body {
   flex: 1;
 }
 
+.statusbar__copyright {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.statusbar__copyright a {
+  color: var(--ink-soft);
+  text-decoration: none;
+  transition: color var(--dur) var(--ease);
+}
+
+.statusbar__copyright a:hover,
+.statusbar__copyright a:focus-visible {
+  color: var(--accent);
+}
+
+@media (max-width: 600px) {
+  .statusbar {
+    flex-wrap: wrap;
+  }
+
+  .statusbar__copyright {
+    order: 3;
+    flex-basis: 100%;
+    justify-content: center;
+  }
+}
+
 /* ---------- Toast ---------- */
 .toast {
   position: fixed;
