@@ -75,6 +75,26 @@ fn background_styles_render_distinct_root_styles() {
 }
 
 #[test]
+fn output_includes_dark_mode_color_metadata() {
+    let html = render(
+        "# 深色模式測試\n\n正文內容。\n\n> 引用內容",
+        "default",
+        &RenderOptions::default(),
+    )
+    .expect("default theme renders")
+    .html;
+
+    assert!(
+        html.contains("data-darkmode-color=\"#a3a3a3\""),
+        "body text should have a readable dark-mode color: {html}"
+    );
+    assert!(
+        html.contains("data-darkmode-bgcolor=\"#191919\""),
+        "article background should have a dark-mode color: {html}"
+    );
+}
+
+#[test]
 fn font_size_scales_body_and_headings() {
     let cases = [
         (FontSize::Small, "font-size:14px;", "font-size:26px;"),
