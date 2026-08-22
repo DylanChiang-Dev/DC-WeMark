@@ -333,6 +333,8 @@ test('copy writes text/html to the clipboard', async ({ page, context, browserNa
   const html = await readClipboardHtml(page);
   expect(html).toContain('<section');
   expect(html).toContain('複製測試');
+  expect(html).toContain('data-darkmode-color="#a3a3a3"');
+  expect(html).toContain('data-darkmode-bgcolor="#191919"');
   expect(html).toContain('background-color:#f7f7f5');
   expect(html).toContain('background:linear-gradient(135deg,#1677ff');
   expect(html).not.toContain('class=');

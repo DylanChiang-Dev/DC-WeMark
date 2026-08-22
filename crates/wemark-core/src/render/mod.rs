@@ -5,6 +5,7 @@
 
 mod code;
 mod containers;
+mod dark_mode;
 
 use comrak::nodes::{AstNode, ListType, NodeList, NodeTable, NodeValue, TableAlignment};
 
@@ -73,7 +74,8 @@ impl Writer {
             st = style::inject(st, &format!("font-family:{font_family};"));
         }
         let st = style::inject(st, self.background.css());
-        format!("<section{st}>{}</section>", std::mem::take(&mut self.out))
+        let html = format!("<section{st}>{}</section>", std::mem::take(&mut self.out));
+        dark_mode::annotate_html(&html)
     }
 
     fn render_style(&self, pairs: Style) -> String {
