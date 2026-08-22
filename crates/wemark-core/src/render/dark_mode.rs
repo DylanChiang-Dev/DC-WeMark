@@ -156,7 +156,7 @@ fn perceived_brightness([r, g, b]: [u8; 3]) -> u16 {
 }
 
 fn lighten_for_dark_mode(rgb: [u8; 3]) -> [u8; 3] {
-    let brightness = u16::from(perceived_brightness(rgb));
+    let brightness = perceived_brightness(rgb);
     let target = 165u16;
     let denominator = 255u16.saturating_sub(brightness).max(1);
     let amount = target.saturating_sub(brightness).min(denominator);
