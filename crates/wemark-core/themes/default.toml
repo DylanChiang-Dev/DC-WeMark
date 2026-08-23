@@ -1,21 +1,23 @@
 # 蘋果風 — DC-WeMark 唯一精修主題
-# clean-room 原創：暖白留白、亮藍重點與固定藍紫紅章節標題。
+# clean-room 原創：淨白留白、亮藍重點與固定紫色章節標題。
+# 深色模式相容：中性色一律取無彩色（r=g=b），且不使用漸層——
+# 公眾號深色模式會把漸層拍扁成單一色標，並對帶色偏的近白底色改寫失敗。
 # 所有樣式最終會被內聯到每個元素上（微信公眾號編輯器只吃 inline style）。
 
 [meta]
 id = "default"
 name = "蘋果風"
-description = "暖白留白、亮藍重點與漸層章節標題，適合大多數文章。"
+description = "淨白留白、亮藍重點與紫色章節標題，適合大多數文章。"
 accent = "#1677ff"
 
 [palette]
-text = "#2c2c2e"
-muted = "#68686b"
-border = "#dedee3"
-code-bg = "#f0f1f5"
-quote-bg = "#f1f5fa"
-quote-text = "#515154"
-table-head = "#eef3fb"
+text = "#2c2c2c"
+muted = "#6b6b6b"
+border = "#e0e0e0"
+code-bg = "#f2f2f2"
+quote-bg = "#f4f4f4"
+quote-text = "#525252"
+table-head = "#efefef"
 inline-code-text = "#b4235d"
 image-bg = "#ffffff"
 
@@ -44,7 +46,7 @@ color = "#ffffff"
 line-height = "1.4"
 margin = "34px 0 18px"
 padding = "8px 14px"
-background = "linear-gradient(135deg,#1677ff 0%,#6f5df6 52%,#ef5b9c 100%)"
+background = "#6f5df6"
 border-radius = "10px"
 letter-spacing = "0.4px"
 
@@ -136,7 +138,7 @@ margin = "24px auto"
 padding = "6px"
 background = "{{image-bg}}"
 border-radius = "12px"
-box-shadow = "0 8px 24px rgba(44,44,46,0.12)"
+box-shadow = "0 8px 24px rgba(0,0,0,0.12)"
 
 [elements.code-inline]
 font-family = "\"SFMono-Regular\", Consolas, Menlo, monospace"
@@ -203,6 +205,6 @@ padding = "16px"
 margin = "22px 0"
 border-radius = "10px"
 border = "1px solid {{border}}"
-box-shadow = "0 4px 14px rgba(44,44,46,0.06)"
+box-shadow = "0 4px 14px rgba(0,0,0,0.06)"
 overflow-x = "auto"
 white-space = "pre"

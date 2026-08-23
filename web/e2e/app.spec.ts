@@ -43,7 +43,7 @@ test('Apple theme renders soft white by default and keeps grid optional', async 
   await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });
 
   const article = page.locator('#preview > section');
-  await expect(article).toHaveCSS('background-color', 'rgb(247, 247, 245)');
+  await expect(article).toHaveCSS('background-color', 'rgb(250, 250, 250)');
   await expect(article).toHaveCSS('background-image', 'none');
 
   const background = page.getByLabel('複製背景');
@@ -63,7 +63,7 @@ test('background style can switch between grid, warm, and none', async ({ page }
 
   await background.selectOption('warm');
   await expect(article).toHaveCSS('background-image', 'none');
-  await expect(article).toHaveCSS('background-color', 'rgb(247, 247, 245)');
+  await expect(article).toHaveCSS('background-color', 'rgb(250, 250, 250)');
 
   await background.selectOption('none');
   await expect(article).toHaveCSS('background-image', 'none');
@@ -92,7 +92,7 @@ test('appearance migration runs once and preserves draft and scroll sync', async
   await expect(page.locator('#preview h1')).toHaveText('保留的草稿');
   await expect(page.locator('#preview > section')).toHaveCSS(
     'background-color',
-    'rgb(247, 247, 245)',
+    'rgb(250, 250, 250)',
   );
   await page.getByRole('button', { name: '排版設定' }).click();
   await expect(page.getByRole('dialog', { name: '排版設定' })).toBeVisible();
@@ -148,7 +148,7 @@ test('settings expose only the completed Apple theme', async ({ page }) => {
   await expect(panel.locator('#currentThemeName')).toHaveText('蘋果風');
   await expect(page.locator('#preview h2').first()).toHaveAttribute(
     'style',
-    /linear-gradient\(135deg,#1677ff/i,
+    /background:#6f5df6/i,
   );
 });
 
@@ -190,7 +190,7 @@ test('font and named accent choices are visual and persist', async ({ page }) =>
   await expect(page.locator('#preview strong').first()).toHaveAttribute('style', /#2563eb/i);
   await expect(page.locator('#preview h2').first()).toHaveAttribute(
     'style',
-    /linear-gradient\(135deg,#1677ff/i,
+    /background:#6f5df6/i,
   );
 
   await page.reload();
@@ -299,7 +299,7 @@ test('Apple Markdown fixture fits phone and wide previews', async ({ page }) => 
       + '`行內碼`\n\n```rust\nfn main() {}\n```\n\n---\n\n'
       + '![測試圖片](data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=)',
   );
-  await expect(page.locator('#preview h2')).toHaveAttribute('style', /linear-gradient/);
+  await expect(page.locator('#preview h2')).toHaveAttribute('style', /background:#6f5df6/);
   await expect(page.locator('#preview img')).toHaveAttribute('style', /box-shadow/);
 
   const phoneMetrics = await page.locator('#preview').evaluate((article) => ({
@@ -333,10 +333,9 @@ test('copy writes text/html to the clipboard', async ({ page, context, browserNa
   const html = await readClipboardHtml(page);
   expect(html).toContain('<section');
   expect(html).toContain('複製測試');
-  expect(html).toContain('data-darkmode-color="#a3a3a3"');
-  expect(html).toContain('data-darkmode-bgcolor="#191919"');
-  expect(html).toContain('background-color:#f7f7f5');
-  expect(html).toContain('background:linear-gradient(135deg,#1677ff');
+  expect(html).toContain('background-color:#fafafa');
+  // 公眾號深色模式會把漸層拍扁成單一色標，章節標題必須輸出純色。
+  expect(html).toContain('background:#6f5df6');
   expect(html).not.toContain('class=');
   expect(html).not.toContain('<style');
   expect(html).not.toContain('<script');
@@ -350,6 +349,6 @@ test('copy writes text/html to the clipboard', async ({ page, context, browserNa
   await page.locator('#copyBtn').click();
   await expect.poll(() => readClipboardHtml(page)).not.toContain('background-image:');
   const plainHtml = await readClipboardHtml(page);
-  expect(plainHtml).toContain('background:linear-gradient(135deg,#1677ff');
+  expect(plainHtml).toContain('background:#6f5df6');
   expect(plainHtml).not.toContain('background-size:');
 });

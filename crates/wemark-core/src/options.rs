@@ -22,8 +22,10 @@ impl From<&str> for BackgroundStyle {
 impl BackgroundStyle {
     pub(crate) fn css(self) -> &'static str {
         match self {
-            Self::Warm => "background-color:#f7f7f5;",
-            Self::Grid => "background-color:#f7f7f5;background-image:linear-gradient(rgba(44,44,46,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(44,44,46,0.05) 1px,transparent 1px);background-size:24px 24px;",
+            // 底色一律取無彩色（r=g=b）：公眾號深色模式對帶色偏的近白底色
+            // 改寫失敗，會留在淺灰而文字被提亮，導致對比度掉到 1.3:1。
+            Self::Warm => "background-color:#fafafa;",
+            Self::Grid => "background-color:#ffffff;background-image:linear-gradient(rgba(0,0,0,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,0.04) 1px,transparent 1px);background-size:24px 24px;",
             Self::None => "",
         }
     }

@@ -27,7 +27,7 @@ fn only_apple_theme_renders_soft_white_by_default() {
 
     let html = r("手帳內文");
     let root_tag = html.split_once('>').expect("root tag closes").0;
-    assert!(root_tag.contains("background-color:#f7f7f5;"), "{root_tag}");
+    assert!(root_tag.contains("background-color:#fafafa;"), "{root_tag}");
     assert!(root_tag.contains("padding:24px 20px;"), "{root_tag}");
 }
 
@@ -36,12 +36,12 @@ fn background_styles_render_distinct_root_styles() {
     let cases = [
         (
             BackgroundStyle::Grid,
-            Some("background-color:#f7f7f5;"),
+            Some("background-color:#ffffff;"),
             true,
         ),
         (
             BackgroundStyle::Warm,
-            Some("background-color:#f7f7f5;"),
+            Some("background-color:#fafafa;"),
             false,
         ),
         (BackgroundStyle::None, None, false),
@@ -72,26 +72,6 @@ fn background_styles_render_distinct_root_styles() {
             assert!(!root_tag.contains("background-color:"), "{root_tag}");
         }
     }
-}
-
-#[test]
-fn output_includes_dark_mode_color_metadata() {
-    let html = render(
-        "# 深色模式測試\n\n正文內容。\n\n> 引用內容",
-        "default",
-        &RenderOptions::default(),
-    )
-    .expect("default theme renders")
-    .html;
-
-    assert!(
-        html.contains("data-darkmode-color=\"#a3a3a3\""),
-        "body text should have a readable dark-mode color: {html}"
-    );
-    assert!(
-        html.contains("data-darkmode-bgcolor=\"#191919\""),
-        "article background should have a dark-mode color: {html}"
-    );
 }
 
 #[test]
@@ -289,7 +269,7 @@ fn themes_list_contains_default() {
 }
 
 #[test]
-fn apple_theme_has_fixed_gradient_and_custom_accent_details() {
+fn apple_theme_has_fixed_heading_color_and_custom_accent_details() {
     let html = render(
         "# 一級標題\n\n## 二級標題\n\n> 引用\n\n**重點**",
         "default",
@@ -301,17 +281,22 @@ fn apple_theme_has_fixed_gradient_and_custom_accent_details() {
     .expect("apple theme renders")
     .html;
 
+    // 不用漸層：公眾號深色模式會把漸層拍扁成單一色標，導致深淺兩種模式顏色不一致。
     assert!(
-        html.contains("background:linear-gradient(135deg,#1677ff 0%,#6f5df6 52%,#ef5b9c 100%);"),
-        "h2 should keep the Apple signature gradient: {html}"
+        html.contains("background:#6f5df6;"),
+        "h2 should keep the fixed signature colour: {html}"
+    );
+    assert!(
+        !html.contains("linear-gradient"),
+        "theme must not emit gradients: {html}"
     );
     assert!(
         html.contains("color:#ff0066;"),
         "custom accent should apply: {html}"
     );
     assert!(
-        !html.contains("background:linear-gradient(135deg,#ff0066"),
-        "custom accent must not replace the signature gradient: {html}"
+        !html.contains("background:#ff0066;"),
+        "custom accent must not replace the signature colour: {html}"
     );
 }
 

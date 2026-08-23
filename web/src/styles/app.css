@@ -857,13 +857,13 @@ body {
 }
 
 .background-option__preview.is-warm {
-  background: #f7f7f5;
+  background: #fafafa;
 }
 
 .background-option__preview.is-grid {
-  background-color: #f7f7f5;
-  background-image: linear-gradient(rgba(47, 54, 64, 0.1) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(47, 54, 64, 0.1) 1px, transparent 1px);
+  background-color: #ffffff;
+  background-image: linear-gradient(rgba(0, 0, 0, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.12) 1px, transparent 1px);
   background-size: 9px 9px;
 }
 

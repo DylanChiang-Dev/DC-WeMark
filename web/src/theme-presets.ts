@@ -10,9 +10,9 @@ export interface ThemePreset {
 const APPLE_PRESET: ThemePreset = {
   id: 'apple',
   name: '蘋果風',
-  description: '暖白留白、亮藍重點與漸層章節標題，適合大多數文章。',
+  description: '淨白留白、亮藍重點與紫色章節標題，適合大多數文章。',
   accent: '#1677ff',
-  palette: ['#1677ff', '#f7f7f5', '#2c2c2e'],
+  palette: ['#1677ff', '#fafafa', '#2c2c2c'],
   engineTheme: 'default',
 };
 
