@@ -161,9 +161,10 @@ export function saveScrollSync(enabled: boolean): void {
 
 export function loadLocale(): OutputLocale {
   try {
-    return localStorage.getItem(LOCALE_KEY) === 'hans' ? 'hans' : 'hant';
+    // 主要使用者以簡體為主；只有明確選過繁體才輸出繁體字形。
+    return localStorage.getItem(LOCALE_KEY) === 'hant' ? 'hant' : 'hans';
   } catch {
-    return 'hant';
+    return 'hans';
   }
 }
 

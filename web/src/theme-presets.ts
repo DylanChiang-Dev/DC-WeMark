@@ -9,8 +9,8 @@ export interface ThemePreset {
 
 const APPLE_PRESET: ThemePreset = {
   id: 'apple',
-  name: '蘋果風',
-  description: '淨白留白、亮藍重點與紫色章節標題，適合大多數文章。',
+  name: '苹果风',
+  description: '净白留白、亮蓝重点与紫色章节标题，适合大多数文章。',
   accent: '#1677ff',
   palette: ['#1677ff', '#fafafa', '#2c2c2c'],
   engineTheme: 'default',
@@ -18,7 +18,6 @@ const APPLE_PRESET: ThemePreset = {
 
 /** 唯一公開主題；後續主題須逐套完成並驗收後再加入。 */
 export const THEME_PRESETS: ThemePreset[] = [APPLE_PRESET];
-export const QUICK_THEME_PRESETS: ThemePreset[] = [APPLE_PRESET];
 
 /** 舊版識別字一律導向現行蘋果風，避免舊草稿無法開啟。 */
 const LEGACY_IDS = new Set([

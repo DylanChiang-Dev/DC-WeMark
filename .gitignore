@@ -27,3 +27,6 @@ playwright-report/
 .env
 .env.*
 !.env.example
+
+# Impeccable 審查截圖（本機產物）
+.impeccable/review/

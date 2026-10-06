@@ -29,14 +29,19 @@ test('typing updates the preview', async ({ page }) => {
   await expect(page.locator('#preview h1')).toHaveText('全新標題');
 });
 
-test('switching theme changes preview styling', async ({ page }) => {
+test('toolbar keeps a single entry for theme and background settings', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });
-  const pills = page.locator('.theme-pill');
-  await expect(pills).toHaveCount(1);
-  await expect(pills.first()).toHaveText('蘋果風');
-  await expect(pills.first()).toHaveAttribute('aria-selected', 'true');
+  await expect(page.locator('.topbar select')).toHaveCount(0);
+  await expect(page.locator('.theme-pill')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: '复制到公众号' })).toBeVisible();
 });
+
+async function chooseBackground(page: Page, value: 'warm' | 'grid' | 'none'): Promise<void> {
+  await page.getByRole('button', { name: '排版设置' }).click();
+  await page.locator(`input[name="backgroundStyle"][value="${value}"]`).check();
+  await page.getByRole('button', { name: '关闭排版设置' }).click();
+}
 
 test('Apple theme renders soft white by default and keeps grid optional', async ({ page }) => {
   await page.goto('/');
@@ -46,32 +51,35 @@ test('Apple theme renders soft white by default and keeps grid optional', async 
   await expect(article).toHaveCSS('background-color', 'rgb(250, 250, 250)');
   await expect(article).toHaveCSS('background-image', 'none');
 
-  const background = page.getByLabel('複製背景');
-  await background.selectOption('grid');
+  await chooseBackground(page, 'grid');
   await expect(article).toHaveCSS('background-image', /linear-gradient/);
   await expect(article).toHaveCSS('background-size', /^24px 24px(?:, 24px 24px)?$/);
-  await expect(page.locator('#editor')).toHaveCSS('background-image', 'none');
+  // 輸出背景只作用於文章；編輯區維持自己的朱絲欄，不受方格紙影響。
+  await expect(page.locator('#editor')).not.toHaveCSS('background-size', /24px 24px/);
 });
 
 test('background style can switch between grid, warm, and none', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });
 
-  const background = page.getByLabel('複製背景');
   const article = page.locator('#preview > section');
-  await expect(background).toHaveValue('warm');
+  const checked = page.locator('input[name="backgroundStyle"]:checked');
+  await expect(checked).toHaveValue('warm');
 
-  await background.selectOption('warm');
+  await chooseBackground(page, 'grid');
+  await expect(article).toHaveCSS('background-image', /linear-gradient/);
+
+  await chooseBackground(page, 'warm');
   await expect(article).toHaveCSS('background-image', 'none');
   await expect(article).toHaveCSS('background-color', 'rgb(250, 250, 250)');
 
-  await background.selectOption('none');
+  await chooseBackground(page, 'none');
   await expect(article).toHaveCSS('background-image', 'none');
   await expect(article).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
 
   await page.reload();
   await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });
-  await expect(background).toHaveValue('none');
+  await expect(checked).toHaveValue('none');
   await expect(article).toHaveCSS('background-image', 'none');
 });
 
@@ -94,9 +102,9 @@ test('appearance migration runs once and preserves draft and scroll sync', async
     'background-color',
     'rgb(250, 250, 250)',
   );
-  await page.getByRole('button', { name: '排版設定' }).click();
-  await expect(page.getByRole('dialog', { name: '排版設定' })).toBeVisible();
-  await expect(page.getByRole('switch', { name: '雙向捲動同步' })).not.toBeChecked();
+  await page.getByRole('button', { name: '排版设置' }).click();
+  await expect(page.getByRole('dialog', { name: '排版设置' })).toBeVisible();
+  await expect(page.getByRole('switch', { name: '双向滚动同步' })).not.toBeChecked();
 
   const migrated = await page.evaluate(() => ({
     migration: localStorage.getItem('wemark:appearance-migration:v2'),
@@ -119,7 +127,7 @@ test('appearance migration runs once and preserves draft and scroll sync', async
     scrollSync: 'false',
   });
 
-  await page.getByRole('button', { name: '關閉排版設定' }).click();
+  await page.getByRole('button', { name: '关闭排版设置' }).click();
   await page.locator('#accent').evaluate((el) => {
     const input = el as HTMLInputElement;
     input.value = '#ff0066';
@@ -133,19 +141,18 @@ test('appearance migration runs once and preserves draft and scroll sync', async
 test('settings expose only the completed Apple theme', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });
-  await page.getByRole('button', { name: '排版設定' }).click();
+  await page.getByRole('button', { name: '排版设置' }).click();
 
-  const panel = page.getByRole('dialog', { name: '排版設定' });
+  const panel = page.getByRole('dialog', { name: '排版设置' });
   await expect(panel).toBeVisible();
   await expect(panel.locator('#themeTotal')).toHaveText('1');
   await expect(panel.locator('.theme-option')).toHaveCount(1);
   await expect(panel.locator('.theme-option__palette > span')).toHaveCount(3);
   const themeGallery = panel.locator('#themeGallery');
-  await expect(themeGallery.getByRole('button', { name: /蘋果風/ })).toBeVisible();
+  await expect(themeGallery.getByRole('button', { name: /苹果风/ })).toBeVisible();
   await expect(panel.locator('[data-theme-group]')).toHaveCount(0);
   await expect(panel.locator('text=霧銀')).toHaveCount(0);
   await expect(panel.locator('text=躍藍')).toHaveCount(0);
-  await expect(panel.locator('#currentThemeName')).toHaveText('蘋果風');
   await expect(page.locator('#preview h2').first()).toHaveAttribute(
     'style',
     /background:#6f5df6/i,
@@ -155,38 +162,38 @@ test('settings expose only the completed Apple theme', async ({ page }) => {
 test('font size and scroll sync preferences persist', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });
-  await page.getByRole('button', { name: '排版設定' }).click();
+  await page.getByRole('button', { name: '排版设置' }).click();
 
-  const fontSizes = page.getByRole('group', { name: '文章字級' });
+  const fontSizes = page.getByRole('group', { name: '文章字号' });
   await fontSizes.getByRole('button', { name: '小' }).click();
   await expect(page.locator('#preview > section')).toHaveCSS('font-size', '14px');
 
-  const sync = page.getByRole('switch', { name: '雙向捲動同步' });
+  const sync = page.getByRole('switch', { name: '双向滚动同步' });
   await expect(sync).toBeChecked();
   await sync.uncheck();
 
   await page.reload();
   await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('#preview > section')).toHaveCSS('font-size', '14px');
-  await page.getByRole('button', { name: '排版設定' }).click();
-  await expect(page.getByRole('switch', { name: '雙向捲動同步' })).not.toBeChecked();
+  await page.getByRole('button', { name: '排版设置' }).click();
+  await expect(page.getByRole('switch', { name: '双向滚动同步' })).not.toBeChecked();
 });
 
 test('font and named accent choices are visual and persist', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });
-  await page.getByRole('button', { name: '排版設定' }).click();
+  await page.getByRole('button', { name: '排版设置' }).click();
 
-  const fontFamily = page.getByRole('group', { name: '文章字體' });
-  await fontFamily.getByRole('button', { name: '刊物宋體' }).click();
+  const fontFamily = page.getByRole('group', { name: '文章字体' });
+  await fontFamily.getByRole('button', { name: '刊物宋体' }).click();
   await expect(page.locator('#preview > section')).toHaveAttribute(
     'style',
     /font-family:Georgia,Songti SC/,
   );
 
-  const accentPresets = page.getByRole('group', { name: '強調色' });
+  const accentPresets = page.getByRole('group', { name: '强调色' });
   await expect(page.locator('#accent')).toHaveAttribute('type', 'color');
-  await accentPresets.getByRole('button', { name: '藍色' }).click();
+  await accentPresets.getByRole('button', { name: '蓝色' }).click();
   await expect(page.locator('#preview strong').first()).toHaveAttribute('style', /#2563eb/i);
   await expect(page.locator('#preview h2').first()).toHaveAttribute(
     'style',
@@ -199,12 +206,12 @@ test('font and named accent choices are visual and persist', async ({ page }) =>
     'style',
     /font-family:Georgia,Songti SC/,
   );
-  await page.getByRole('button', { name: '排版設定' }).click();
-  await expect(fontFamily.getByRole('button', { name: '刊物宋體' })).toHaveAttribute(
+  await page.getByRole('button', { name: '排版设置' }).click();
+  await expect(fontFamily.getByRole('button', { name: '刊物宋体' })).toHaveAttribute(
     'aria-pressed',
     'true',
   );
-  await expect(accentPresets.getByRole('button', { name: '藍色' })).toHaveAttribute(
+  await expect(accentPresets.getByRole('button', { name: '蓝色' })).toHaveAttribute(
     'aria-pressed',
     'true',
   );
@@ -246,9 +253,9 @@ test('word count reflects editor content', async ({ page }) => {
 test('footer shows copyright and author links', async ({ page }) => {
   await page.goto('/');
 
-  const copyright = page.getByLabel('版權與作者連結');
+  const copyright = page.getByLabel('版权与作者链接');
   await expect(copyright).toContainText('© 2026 Dylan Chiang');
-  await expect(copyright.getByRole('link', { name: '個人首頁' })).toHaveAttribute(
+  await expect(copyright.getByRole('link', { name: '个人主页' })).toHaveAttribute(
     'href',
     'https://dc.caiada.edu.kg/',
   );
@@ -310,7 +317,7 @@ test('Apple Markdown fixture fits phone and wide previews', async ({ page }) => 
   expect(phoneMetrics.scrollWidth).toBeLessThanOrEqual(phoneMetrics.width);
   expect(phoneMetrics.imageWidth).toBeLessThanOrEqual(phoneMetrics.width);
 
-  await page.getByRole('button', { name: '寬版' }).click();
+  await page.getByRole('button', { name: '宽版' }).click();
   await expect(page.locator('#phone')).toHaveClass(/is-wide/);
   const wideMetrics = await page.locator('#preview').evaluate((article) => ({
     width: article.clientWidth,
@@ -330,6 +337,7 @@ test('copy writes text/html to the clipboard', async ({ page, context, browserNa
   );
   await page.locator('#copyBtn').click();
   await expect(page.locator('#toast')).toHaveClass(/is-show/);
+  await expect(page.locator('#stamp')).toHaveClass(/is-stamped/);
 
   const html = await readClipboardHtml(page);
   expect(html).toContain('<section');
@@ -359,10 +367,38 @@ test('copy writes text/html to the clipboard', async ({ page, context, browserNa
     expect(lineHeight).toMatch(/^\d+(?:\.\d+)?px$/);
   }
 
-  await page.getByLabel('複製背景').selectOption('none');
+  await chooseBackground(page, 'none');
   await page.locator('#copyBtn').click();
   await expect.poll(() => readClipboardHtml(page)).not.toContain('background-image:');
   const plainHtml = await readClipboardHtml(page);
   expect(plainHtml).toContain('background:#6f5df6');
   expect(plainHtml).not.toContain('background-size:');
+});
+
+test('divider can be resized from the keyboard', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });
+  const divider = page.getByRole('separator', { name: '调整编辑区与预览区宽度' });
+  await divider.focus();
+  await divider.press('ArrowLeft');
+  await expect(divider).toHaveAttribute('aria-valuenow', '45');
+  await divider.press('ArrowRight');
+  await divider.press('ArrowRight');
+  await expect(divider).toHaveAttribute('aria-valuenow', '55');
+});
+
+test('narrow screens switch between editing and preview', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  await expect(page.locator('#editor')).toBeVisible();
+  await expect(page.locator('#preview h1')).toBeHidden();
+
+  const views = page.getByRole('group', { name: '切换编辑或预览' });
+  await views.getByRole('button', { name: '预览' }).click();
+  await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('#editor')).toBeHidden();
+  await expect(views.getByRole('button', { name: '预览' })).toHaveAttribute('aria-pressed', 'true');
+
+  await views.getByRole('button', { name: '编辑' }).click();
+  await expect(page.locator('#editor')).toBeVisible();
 });

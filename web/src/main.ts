@@ -17,12 +17,7 @@ import {
 } from './engine.js';
 import { SAMPLE_MARKDOWN } from './sample.js';
 import { createSettingsPanel, type SettingsController } from './settings.js';
-import { renderThemeSwitcher } from './themes.js';
-import {
-  getThemePreset,
-  QUICK_THEME_PRESETS,
-  type ThemePreset,
-} from './theme-presets.js';
+import { getThemePreset, type ThemePreset } from './theme-presets.js';
 import {
   debouncedSaveDraft,
   loadAccent,
@@ -53,10 +48,12 @@ const $ = <T extends HTMLElement>(id: string): T => {
 const editorEl = $<HTMLTextAreaElement>('editor');
 const previewEl = $('preview');
 const phoneEl = $('phone');
-const themesEl = $('themes');
 const statusEl = $('status');
 const wordcountEl = $('wordcount');
 const toastEl = $('toast');
+const stampEl = $('stamp');
+const draftStateEl = $('draftState');
+const draftLabelEl = $('draftLabel');
 const fileInput = $<HTMLInputElement>('fileInput');
 const appEl = document.querySelector<HTMLElement>('.app')!;
 
@@ -72,9 +69,10 @@ let scrollSyncEnabled = loadScrollSync();
 let lastHtml = '';
 let settingsController: SettingsController | undefined;
 
+const DRAFT_DELAY_MS = 1000;
 const editor = createTextareaEditor(editorEl);
-const draftSaver = debouncedSaveDraft(1000);
-const UNDO_HINT = '可按 Cmd/Ctrl+Z 復原';
+const draftSaver = debouncedSaveDraft(DRAFT_DELAY_MS);
+const UNDO_HINT = '可按 Cmd/Ctrl+Z 撤销';
 let highlightState: 'idle' | 'loading' | 'failed' = 'idle';
 
 function maybeLoadHighlighter(markdown: string): void {
@@ -109,7 +107,7 @@ function renderPreview(): void {
     maybeLoadHighlighter(md);
     showResultStatus(result);
   } catch (err) {
-    setStatus(err instanceof Error ? err.message : '渲染失敗', true);
+    setStatus(err instanceof Error ? err.message : '渲染失败', true);
   }
   wordcountEl.textContent = `${countWords(md)} 字`;
 }
@@ -125,21 +123,21 @@ function setStatus(text: string, warning = false, detail = text): void {
 function showResultStatus(result: RenderResult): void {
   const { warnings } = result;
   if (warnings.length > 0) {
-    const extra = warnings.length > 1 ? `（另有 ${warnings.length - 1} 項提醒）` : '';
+    const extra = warnings.length > 1 ? `（另有 ${warnings.length - 1} 项提醒）` : '';
     setStatus(`${warnings[0]}${extra}`, true, warnings.join('\n'));
     return;
   }
   if (highlightState === 'failed') {
-    setStatus('程式碼高亮載入失敗，程式碼區塊以純文字輸出；重新整理頁面可再試', true);
+    setStatus('代码高亮加载失败，代码块以纯文本输出；刷新页面可重试', true);
     return;
   }
   const notes: string[] = [];
-  if (highlightState === 'loading') notes.push('程式碼高亮載入中…');
-  if (result.footnotes > 0) notes.push(`已整理 ${result.footnotes} 條外部連結`);
+  if (highlightState === 'loading') notes.push('代码高亮加载中…');
+  if (result.footnotes > 0) notes.push(`已整理 ${result.footnotes} 条外部链接`);
   if (result.remoteImages > 0) {
-    notes.push(`${result.remoteImages} 張網路圖片會由公眾號轉存，若顯示失敗請改在公眾號內上傳`);
+    notes.push(`${result.remoteImages} 张网络图片会由公众号转存，若显示失败请改在公众号内上传`);
   }
-  setStatus(notes.length > 0 ? notes.join('；') : '就緒');
+  setStatus(notes.length > 0 ? notes.join('；') : '就绪');
 }
 
 let toastTimer: ReturnType<typeof setTimeout> | undefined;
@@ -150,19 +148,35 @@ function toast(message: string): void {
   toastTimer = setTimeout(() => toastEl.classList.remove('is-show'), 2600);
 }
 
+let stampTimer: ReturnType<typeof setTimeout> | undefined;
+/** 複製成功的落款鈐印：重新觸發動畫後自動淡出。 */
+function stamp(): void {
+  stampEl.classList.remove('is-stamped');
+  void stampEl.offsetWidth;
+  stampEl.classList.add('is-stamped');
+  if (stampTimer) clearTimeout(stampTimer);
+  stampTimer = setTimeout(() => stampEl.classList.remove('is-stamped'), 2200);
+}
+
+function setDraftState(state: 'saved' | 'pending'): void {
+  draftStateEl.dataset.state = state;
+  draftLabelEl.textContent = state === 'saved' ? '草稿已存本机' : '编辑中';
+}
+
 async function onCopy(): Promise<void> {
   // 同步以當前編輯器內容重繪，避免用到 debounce 尚未刷新的舊 HTML。
   renderPreview();
   const plain = editor.getValue();
   try {
     const via = await copyHtml(lastHtml, plain);
+    stamp();
     toast(
       via === 'clipboard-api'
-        ? '已複製！到公眾號編輯器直接貼上（Cmd/Ctrl+V）即可'
-        : '已複製（相容模式）！到公眾號直接貼上即可',
+        ? '已复制，到公众号编辑器直接粘贴（Cmd/Ctrl+V）即可'
+        : '已复制（兼容模式），到公众号编辑器直接粘贴即可',
     );
   } catch {
-    toast('複製失敗，請改用瀏覽器的全選並複製');
+    toast('复制失败，请在预览区全选后手动复制');
   }
 }
 
@@ -170,10 +184,17 @@ function setupWidthToggle(): void {
   const group = $('widthToggle');
   for (const btn of group.querySelectorAll<HTMLButtonElement>('button')) {
     btn.addEventListener('click', () => {
-      for (const b of group.querySelectorAll('button')) b.classList.remove('is-active');
-      btn.classList.add('is-active');
+      setPressed(group, btn);
       phoneEl.classList.toggle('is-wide', btn.dataset.w === 'wide');
     });
+  }
+}
+
+function setPressed(group: HTMLElement, active: HTMLButtonElement): void {
+  for (const b of group.querySelectorAll<HTMLButtonElement>('button')) {
+    const on = b === active;
+    b.classList.toggle('is-active', on);
+    b.setAttribute('aria-pressed', String(on));
   }
 }
 
@@ -181,12 +202,25 @@ function setupDivider(): void {
   const divider = $('divider');
   const panes = document.querySelector<HTMLElement>('.panes')!;
   let dragging = false;
+  let ratio = 0.5;
+
+  const applyRatio = (next: number) => {
+    ratio = Math.min(0.8, Math.max(0.2, next));
+    panes.style.gridTemplateColumns = `${ratio}fr 10px ${1 - ratio}fr`;
+    divider.setAttribute('aria-valuenow', String(Math.round(ratio * 100)));
+  };
 
   const onMove = (clientX: number) => {
     const rect = panes.getBoundingClientRect();
-    const ratio = Math.min(0.8, Math.max(0.2, (clientX - rect.left) / rect.width));
-    panes.style.gridTemplateColumns = `${ratio}fr 6px ${1 - ratio}fr`;
+    applyRatio((clientX - rect.left) / rect.width);
   };
+
+  divider.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft') applyRatio(ratio - 0.05);
+    else if (e.key === 'ArrowRight') applyRatio(ratio + 0.05);
+    else return;
+    e.preventDefault();
+  });
 
   divider.addEventListener('pointerdown', (e) => {
     dragging = true;
@@ -211,7 +245,7 @@ function setupFileIO(): void {
     void file.text().then((text) => {
       editor.replaceAll(text);
       fileInput.value = '';
-      toast(`已匯入 ${file.name}，${UNDO_HINT}`);
+      toast(`已导入 ${file.name}，${UNDO_HINT}`);
     });
   });
   $('exportBtn').addEventListener('click', () => {
@@ -220,9 +254,19 @@ function setupFileIO(): void {
 }
 
 function setupMobileToggle(): void {
-  const toggle = () => appEl.classList.toggle('show-preview');
-  // 窄螢幕可見按鈕
-  $('mobileToggle').addEventListener('click', toggle);
+  const group = $('mobileToggle');
+  const buttons = group.querySelectorAll<HTMLButtonElement>('button');
+  const show = (preview: boolean) => {
+    appEl.classList.toggle('show-preview', preview);
+    for (const b of buttons) {
+      if ((b.dataset.view === 'preview') === preview) setPressed(group, b);
+    }
+  };
+  const toggle = () => show(!appEl.classList.contains('show-preview'));
+  // 窄螢幕可見的編輯／預覽切換
+  for (const b of buttons) {
+    b.addEventListener('click', () => show(b.dataset.view === 'preview'));
+  }
   // 桌面快捷鍵
   document.addEventListener('keydown', (e) => {
     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
@@ -263,11 +307,14 @@ async function boot(): Promise<void> {
 
   const draft = loadDraft();
   editor.setValue(draft && draft.trim() ? draft : SAMPLE_MARKDOWN);
+  const markSaved = debounce(() => setDraftState('saved'), DRAFT_DELAY_MS + 50);
   editor.onChange((value) => {
     draftSaver.save(value);
+    setDraftState('pending');
+    markSaved();
     debouncedRender();
   });
-  editor.onFileDrop((name) => toast(`已載入 ${name}，${UNDO_HINT}`));
+  editor.onFileDrop((name) => toast(`已载入 ${name}，${UNDO_HINT}`));
   // 關閉或切走分頁前立即寫入，避免遺失 debounce 期間的最後修改。
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') draftSaver.flush();
@@ -277,7 +324,7 @@ async function boot(): Promise<void> {
   try {
     await initEngine();
   } catch {
-    setStatus('引擎載入失敗，請重新整理頁面');
+    setStatus('引擎加载失败，请刷新页面', true);
     return;
   }
 
@@ -286,18 +333,11 @@ async function boot(): Promise<void> {
     currentPreset = getThemePreset(null);
   }
 
-  const renderQuickThemes = () => {
-    renderThemeSwitcher(themesEl, QUICK_THEME_PRESETS, currentPreset.id, (id) => {
-      selectTheme(getThemePreset(id));
-    });
-  };
-
   const selectTheme = (preset: ThemePreset) => {
     currentPreset = preset;
     currentAccent = ''; // 切換主題時重置為主題預設強調色
     saveAccent('');
     saveTheme(preset.id);
-    renderQuickThemes();
     settingsController?.setTheme(preset.id);
     settingsController?.setAccent('');
     renderPreview();
@@ -312,7 +352,6 @@ async function boot(): Promise<void> {
   const setBackground = (background: BackgroundStyle) => {
     currentBackground = background;
     saveBackground(background);
-    backgroundQuick.value = background;
     settingsController?.setBackground(background);
     renderPreview();
   };
@@ -330,12 +369,6 @@ async function boot(): Promise<void> {
     settingsController?.setFontFamily(fontFamily);
     renderPreview();
   };
-
-  const backgroundQuick = $<HTMLSelectElement>('backgroundQuick');
-  backgroundQuick.value = currentBackground;
-  backgroundQuick.addEventListener('change', () => {
-    setBackground(backgroundQuick.value as BackgroundStyle);
-  });
 
   settingsController = createSettingsPanel(
     {
@@ -365,7 +398,6 @@ async function boot(): Promise<void> {
     },
   );
 
-  renderQuickThemes();
   renderPreview();
   editor.focus();
 

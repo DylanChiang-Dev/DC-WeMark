@@ -1,0 +1,246 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-06T14:54:20.678426+00:00",
+  "title": "Design System: DC-WeMark",
+  "extensions": {
+    "colorMeta": {
+      "zhu": {
+        "role": "primary",
+        "displayName": "印泥朱",
+        "tonalRamp": [
+          "#3d120d",
+          "#5e1b14",
+          "#7f251b",
+          "#9c2d21",
+          "#bf3a2b",
+          "#d6685b",
+          "#ebaaa1",
+          "#fbeeeb"
+        ]
+      },
+      "zhu-deep": {
+        "role": "primary",
+        "displayName": "深朱"
+      },
+      "zhu-wash": {
+        "role": "primary",
+        "displayName": "朱暈"
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "墨",
+        "tonalRamp": [
+          "#1d2226",
+          "#2f363c",
+          "#454d55",
+          "#646d76",
+          "#8a939b",
+          "#b4c0bd",
+          "#d6dedc",
+          "#fbfcfc"
+        ]
+      },
+      "ink-soft": {
+        "role": "neutral",
+        "displayName": "淡墨"
+      },
+      "ink-faint": {
+        "role": "neutral",
+        "displayName": "枯墨"
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "界線"
+      },
+      "line-strong": {
+        "role": "neutral",
+        "displayName": "深界線"
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "箋紙白"
+      },
+      "chrome": {
+        "role": "neutral",
+        "displayName": "素箋"
+      },
+      "qing": {
+        "role": "neutral",
+        "displayName": "天青",
+        "tonalRamp": [
+          "#243230",
+          "#3b4f4b",
+          "#577069",
+          "#78928b",
+          "#9cb3ad",
+          "#bfd0cb",
+          "#dae4e1",
+          "#f2f6f5"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "brand": {
+        "displayName": "字標",
+        "purpose": "頂欄 DC-WeMark。"
+      },
+      "title": {
+        "displayName": "面板標題",
+        "purpose": "設定面板標題。"
+      },
+      "heading": {
+        "displayName": "區段標題",
+        "purpose": "設定區段標題。"
+      },
+      "body": {
+        "displayName": "介面正文",
+        "purpose": "按鈕與選項。"
+      },
+      "label": {
+        "displayName": "說明",
+        "purpose": "說明文字與狀態列。"
+      },
+      "editor": {
+        "displayName": "原文",
+        "purpose": "Markdown 編輯區，行高等於朱絲欄間距。"
+      }
+    },
+    "shadows": [
+      {
+        "name": "sheet",
+        "value": "0 1px 2px rgba(29,34,38,0.06), 0 22px 44px -18px rgba(29,34,38,0.28)",
+        "purpose": "預覽箋浮起。"
+      },
+      {
+        "name": "seal-button",
+        "value": "0 1px 1px rgba(110,24,16,0.18), 0 6px 16px -6px rgba(156,45,33,0.55)",
+        "purpose": "複製印章按鈕。"
+      },
+      {
+        "name": "panel",
+        "value": "-24px 0 48px -24px rgba(29,34,38,0.35)",
+        "purpose": "設定面板左側。"
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "所有狀態轉換與鈐印。"
+      },
+      {
+        "name": "stamp-press",
+        "value": "2.2s",
+        "purpose": "落款鈐印：壓下、停留、淡出。"
+      },
+      {
+        "name": "panel-in",
+        "value": "280ms",
+        "purpose": "設定面板滑入。"
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "single-pane",
+        "value": "820px"
+      },
+      {
+        "name": "compact",
+        "value": "560px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "复制到公众号",
+      "kind": "button",
+      "refersTo": "button-copy",
+      "description": "唯一主要行動；方印式朱紅按鈕。",
+      "html": "<button class=\"ds-copy\"><span class=\"ds-copy__seal\">印</span>复制到公众号</button>",
+      "css": ".ds-copy{display:inline-flex;align-items:center;gap:9px;min-height:38px;padding:0 16px 0 7px;font-size:14px;font-weight:600;color:#fff;background:#bf3a2b;border:none;border-radius:4px;box-shadow:0 1px 1px rgba(110,24,16,.18),0 6px 16px -6px rgba(156,45,33,.55);cursor:pointer;transition:background .18s}.ds-copy:hover{background:#9c2d21}.ds-copy:active{transform:translateY(1px) scale(.98)}.ds-copy:focus-visible{outline:2px solid #1d2226;outline-offset:2px}.ds-copy__seal{display:grid;place-items:center;width:25px;height:25px;font-family:'Songti SC',STSong,serif;font-size:15px;border:1px solid rgba(255,255,255,.85);border-radius:2px}"
+    },
+    {
+      "name": "工具按鈕",
+      "kind": "button",
+      "refersTo": "button-tool",
+      "description": "导入／导出／设置。",
+      "html": "<button class=\"ds-tool\"><svg viewBox=\"0 0 20 20\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M10 3v9m0 0-3.5-3.5M10 12l3.5-3.5M4 13.5V16h12v-2.5\"/></svg>导入</button>",
+      "css": ".ds-tool{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 10px;font-size:13px;color:#454d55;background:transparent;border:none;border-radius:6px;cursor:pointer}.ds-tool:hover{color:#1d2226;background:rgba(29,34,38,.06)}.ds-tool:focus-visible{outline:2px solid #bf3a2b;outline-offset:2px}"
+    },
+    {
+      "name": "分段切換",
+      "kind": "chip",
+      "refersTo": "segmented-active",
+      "description": "手机／宽版、编辑／预览。",
+      "html": "<div class=\"ds-seg\"><button class=\"is-active\">手机</button><button>宽版</button></div>",
+      "css": ".ds-seg{display:inline-flex;padding:3px;background:#fff;border:1px solid #d6dedc;border-radius:8px}.ds-seg button{min-width:56px;min-height:30px;font-size:13px;color:#646d76;background:transparent;border:none;border-radius:5px;cursor:pointer}.ds-seg button:hover{color:#1d2226}.ds-seg button.is-active{color:#9c2d21;font-weight:600;background:#fbeeeb}"
+    },
+    {
+      "name": "朱絲欄編輯區",
+      "kind": "input",
+      "refersTo": "editor",
+      "description": "每行朱絲欄與左側界欄的 Markdown 編輯區。",
+      "html": "<textarea class=\"ds-editor\"># 标题\n\n正文第一行</textarea>",
+      "css": ".ds-editor{width:100%;height:140px;padding:28px 24px 28px 56px;border:none;outline:none;resize:none;font:15px/28px Menlo,monospace;color:#1d2226;caret-color:#bf3a2b;background-color:#fff;background-image:linear-gradient(90deg,transparent 32px,rgba(191,58,43,.42) 32px 34px,transparent 34px 37px,rgba(191,58,43,.42) 37px 38px,transparent 38px),linear-gradient(transparent 27px,rgba(191,58,43,.14) 0);background-size:100% 100%,100% 28px;background-origin:padding-box,content-box;background-attachment:local,local}"
+    },
+    {
+      "name": "選項卡",
+      "kind": "card",
+      "refersTo": "option-active",
+      "description": "設定面板中的可選項目。",
+      "html": "<button class=\"ds-option is-active\">刊物宋体</button>",
+      "css": ".ds-option{min-height:40px;padding:8px 14px;font-size:13px;color:#454d55;background:#fff;border:1px solid #d6dedc;border-radius:6px;cursor:pointer}.ds-option:hover{border-color:#b4c0bd;color:#1d2226}.ds-option.is-active{color:#1d2226;background:#fbeeeb;border-color:#bf3a2b}"
+    },
+    {
+      "name": "落款鈐印",
+      "kind": "custom",
+      "description": "複製成功時的朱文方印。",
+      "html": "<div class=\"ds-stamp\"><span>复</span><span>制</span><span>完</span><span>成</span></div>",
+      "css": ".ds-stamp{display:grid;grid-template-rows:repeat(2,auto);grid-auto-flow:column;place-content:center;gap:2px 4px;direction:rtl;width:82px;height:82px;font:700 24px/1 'Songti SC',STSong,serif;color:#bf3a2b;border:3px solid #bf3a2b;border-radius:7px;outline:1px solid #bf3a2b;outline-offset:-8px;transform:rotate(-7deg)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "朱絲欄箋",
+    "overview": "工具外殼取材自民國木刻信箋（八行箋）：編輯區是一張每行都有朱絲欄的白箋，外圍是天青色箋，頂欄與面板以一粗一細的「文武線」收邊。寫公眾號被當成寫給讀者的一封信，複製就是落款鈐印。",
+    "keyCharacteristics": [
+      "朱紅只出現在四處：朱絲欄、印章（複製）、選中狀態、分隔線握把。",
+      "天青灰底承托白箋，冷色地避開暖米黃預設。",
+      "宋體負責品牌與標題，黑體負責介面，等寬字只用於 Markdown 原文。",
+      "狀態以線形表達（實線／虛線），不靠顏色。"
+    ],
+    "rules": [
+      {
+        "name": "The Four Places Rule",
+        "body": "朱紅只用於朱絲欄、印章、選中狀態與分隔線握把；任何新元件想用朱紅，必須屬於這四類之一。",
+        "section": "colors"
+      },
+      {
+        "name": "The Cool Ground Rule",
+        "body": "外圍底色維持冷調天青；不改成暖米黃或奶油色。",
+        "section": "colors"
+      },
+      {
+        "name": "The Ruled Line Rule",
+        "body": "編輯區行高必須等於朱絲欄間距（28px）；改字級時同步改 --rule-h，否則文字會脫離欄線。",
+        "section": "typography"
+      },
+      {
+        "name": "The One Elevation Rule",
+        "body": "一個元素只宣告一種層次：邊框或陰影擇一；版框是裝飾邊欄，不算邊框層次。",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do 讓新增的選中或行動元件沿用朱暈底加朱紅細框（zhu-wash / zhu）。",
+      "Do 圖示用 20×20 viewBox、1.5 描邊、圓角端點的自繪 SVG。",
+      "Do 頂部收邊使用文武線，而不是單一 1px 邊框。",
+      "Do 介面文案使用簡體中文。"
+    ],
+    "donts": [
+      "Don't 把朱紅用在四處以外（例如裝飾色塊、標題文字）。",
+      "Don't 用 Unicode 符號或 emoji 充當圖示。",
+      "Don't 在標題上方加 eyebrow 小標。",
+      "Don't 為外殼載入外部字體或任何網路資源。"
+    ]
+  }
+}

@@ -31,11 +31,11 @@ export interface SettingsController {
 }
 
 const ACCENT_PRESETS = [
-  { name: '主題色', value: '' },
-  { name: '藍色', value: '#2563eb' },
-  { name: '青綠', value: '#0f766e' },
+  { name: '主题色', value: '' },
+  { name: '蓝色', value: '#2563eb' },
+  { name: '青绿', value: '#0f766e' },
   { name: '墨色', value: '#20242b' },
-  { name: '珊瑚紅', value: '#dc4c64' },
+  { name: '珊瑚红', value: '#dc4c64' },
   { name: '琥珀色', value: '#b7791f' },
   { name: '紫色', value: '#7c3aed' },
   { name: '橙色', value: '#ea580c' },
@@ -54,9 +54,6 @@ export function createSettingsPanel(
   const panel = byId<HTMLElement>('settingsPanel');
   const overlay = byId<HTMLElement>('settingsOverlay');
   const gallery = byId<HTMLElement>('themeGallery');
-  const currentName = byId<HTMLElement>('currentThemeName');
-  const currentDescription = byId<HTMLElement>('currentThemeDescription');
-  const currentSwatch = byId<HTMLElement>('currentThemeSwatch');
   const themeTotal = byId<HTMLElement>('themeTotal');
   const accentOptions = byId<HTMLElement>('accentOptions');
   const scrollSync = byId<HTMLInputElement>('scrollSync');
@@ -79,18 +76,6 @@ export function createSettingsPanel(
     panel.setAttribute('aria-hidden', 'false');
     document.body.classList.add('settings-open');
     byId<HTMLButtonElement>('settingsClose').focus();
-  };
-
-  const renderCurrentTheme = () => {
-    const preset = getThemePreset(state.themeId);
-    currentName.textContent = preset.name;
-    currentDescription.textContent = preset.description;
-    currentSwatch.replaceChildren();
-    for (const color of preset.palette) {
-      const swatch = document.createElement('span');
-      swatch.style.background = color;
-      currentSwatch.append(swatch);
-    }
   };
 
   const renderGallery = () => {
@@ -123,7 +108,6 @@ export function createSettingsPanel(
       option.append(palette, copy);
       option.addEventListener('click', () => {
         state.themeId = preset.id;
-        renderCurrentTheme();
         renderGallery();
         handlers.onTheme(preset);
       });
@@ -169,9 +153,9 @@ export function createSettingsPanel(
     input.id = 'accent';
     input.type = 'color';
     input.value = state.accent || theme.accent;
-    input.setAttribute('aria-label', '自訂強調色');
+    input.setAttribute('aria-label', '自定义强调色');
     const name = document.createElement('strong');
-    name.textContent = '自訂';
+    name.textContent = '自定义';
     custom.append(input, name);
     input.addEventListener('input', () => {
       state.accent = input.value;
@@ -265,7 +249,6 @@ export function createSettingsPanel(
     }
   };
 
-  renderCurrentTheme();
   renderGallery();
   renderAccentOptions();
   themeTotal.textContent = String(THEME_PRESETS.length);
@@ -278,7 +261,6 @@ export function createSettingsPanel(
   return {
     setTheme(themeId) {
       state.themeId = themeId;
-      renderCurrentTheme();
       renderGallery();
       renderAccentOptions();
     },

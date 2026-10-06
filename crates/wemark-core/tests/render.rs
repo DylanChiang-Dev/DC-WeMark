@@ -376,7 +376,7 @@ fn unsafe_link_keeps_text_but_drops_href() {
     assert!(!res.html.contains("javascript:"), "{}", res.html);
     assert!(!res.html.contains("<a "), "{}", res.html);
     assert!(res.html.contains("這裡"));
-    assert!(res.warnings.iter().any(|w| w.contains("不安全的連結")));
+    assert!(res.warnings.iter().any(|w| w.contains("不安全的链接")));
 }
 
 #[test]
@@ -389,7 +389,7 @@ fn unsafe_image_is_replaced_by_alt_text() {
     .unwrap();
     assert!(!res.html.contains("<img"), "{}", res.html);
     assert!(res.html.contains("示意"));
-    assert!(res.warnings.iter().any(|w| w.contains("不安全的圖片")));
+    assert!(res.warnings.iter().any(|w| w.contains("不安全的图片")));
 
     let res = render(
         "[A & B](javascript:x)",
@@ -413,7 +413,7 @@ fn local_images_warn_and_remote_images_are_counted() {
     )
     .unwrap();
     assert!(
-        res.warnings.iter().any(|w| w.contains("本機")),
+        res.warnings.iter().any(|w| w.contains("本地或相对路径")),
         "{:?}",
         res.warnings
     );

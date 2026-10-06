@@ -87,7 +87,7 @@ impl Writer {
         while self.container_depth > 0 {
             self.out.push_str("</section>");
             self.container_depth -= 1;
-            self.warnings.push("未閉合的排版容器已自動閉合".to_string());
+            self.warnings.push("未闭合的排版容器已自动闭合".to_string());
         }
     }
 
@@ -170,7 +170,7 @@ impl Writer {
         if !compat::is_safe_url(url, UrlKind::Link) {
             self.out.push_str(&inner);
             self.warnings
-                .push(format!("已移除不安全的連結：{}", plain_text(&inner)));
+                .push(format!("已移除不安全的链接：{}", plain_text(&inner)));
             return;
         }
         if self.external_footnotes && compat::is_external_link(url) {
@@ -202,12 +202,12 @@ impl Writer {
         };
         if compat::is_local_image(url) {
             self.warnings.push(format!(
-                "圖片「{label}」是本機或相對路徑，貼進公眾號後無法顯示，請改用網路圖片或在公眾號內上傳"
+                "图片「{label}」是本地或相对路径，粘贴到公众号后无法显示，请改用网络图片或在公众号内上传"
             ));
         }
         if !compat::is_safe_url(url, UrlKind::Image) {
             if !compat::is_local_image(url) {
-                self.warnings.push(format!("已移除不安全的圖片：{label}"));
+                self.warnings.push(format!("已移除不安全的图片：{label}"));
             }
             self.out.push_str(&alt);
             return;

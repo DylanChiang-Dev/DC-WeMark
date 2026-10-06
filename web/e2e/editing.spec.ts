@@ -32,7 +32,7 @@ test('importing a file replaces the draft and can be undone', async ({ page }) =
     buffer: Buffer.from('# 匯入的文章\r\n\r\n內文'),
   });
   await expect(editor).toHaveValue('# 匯入的文章\n\n內文');
-  await expect(page.locator('#toast')).toContainText('復原');
+  await expect(page.locator('#toast')).toContainText('撤销');
   await expect(page.locator('#preview h1')).toHaveText('匯入的文章');
 
   await editor.press('ControlOrMeta+z');
@@ -45,7 +45,7 @@ test('clearing the draft via word count can be undone', async ({ page }) => {
   await editor.fill('# 要保留的內容');
   await page.locator('#wordcount').dblclick();
   await expect(editor).not.toHaveValue('# 要保留的內容');
-  await expect(page.locator('#toast')).toContainText('復原');
+  await expect(page.locator('#toast')).toContainText('撤销');
   await editor.press('ControlOrMeta+z');
   await expect(editor).toHaveValue('# 要保留的內容');
 });
@@ -64,14 +64,14 @@ test('unsafe links are stripped and reported', async ({ page }) => {
   await expect(page.locator('#preview')).toContainText('這裡');
   await expect(page.locator('#preview a')).toHaveCount(0);
   await expect(page.locator('#status')).toHaveClass(/is-warning/);
-  await expect(page.locator('#status')).toContainText('不安全的連結');
+  await expect(page.locator('#status')).toContainText('不安全的链接');
 });
 
 test('local images warn about WeChat upload', async ({ page }) => {
   await ready(page);
   await page.locator('#editor').fill('![封面](./cover.png)');
   await expect(page.locator('#status')).toHaveClass(/is-warning/);
-  await expect(page.locator('#status')).toContainText('本機或相對路徑');
+  await expect(page.locator('#status')).toContainText('本地或相对路径');
 });
 
 test('markdown footnotes and simplified output titles', async ({ page }) => {
@@ -79,18 +79,19 @@ test('markdown footnotes and simplified output titles', async ({ page }) => {
   await page
     .locator('#editor')
     .fill('正文[^1] 與 [Rust](https://www.rust-lang.org)\n\n[^1]: 補充說明\n');
-  await expect(page.locator('#preview')).toContainText('[註1]');
-  await expect(page.locator('#preview')).toContainText('註釋');
-  await expect(page.locator('#preview')).toContainText('參考連結');
+  // 主要使用者以簡體為主：預設輸出簡體字形，可切換為繁體並保存。
+  await expect(page.locator('#preview')).toContainText('[注1]');
+  await expect(page.locator('#preview')).toContainText('注释');
+  await expect(page.locator('#preview')).toContainText('参考链接');
 
   await page.locator('#settingsBtn').click();
-  await page.locator('[data-locale="hans"]').click();
-  await expect(page.locator('[data-locale="hans"]')).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.locator('#preview')).toContainText('参考链接');
-  await expect(page.locator('#preview')).toContainText('[注1]');
+  await page.locator('[data-locale="hant"]').click();
+  await expect(page.locator('[data-locale="hant"]')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#preview')).toContainText('參考連結');
+  await expect(page.locator('#preview')).toContainText('[註1]');
 
   await page.reload();
-  await expect(page.locator('#preview')).toContainText('参考链接', { timeout: 15_000 });
+  await expect(page.locator('#preview')).toContainText('參考連結', { timeout: 15_000 });
 });
 
 test('highlighter is not downloaded for articles without code', async ({ page }) => {
@@ -108,5 +109,5 @@ test('code blocks are colour highlighted after lazy loading', async ({ page }) =
   const coloured = page.locator('#preview pre span[style*="color"]');
   await expect.poll(() => coloured.count(), { timeout: 30_000 }).toBeGreaterThan(0);
   await expect(page.locator('#preview pre')).toContainText('fn main()');
-  await expect(page.locator('#status')).not.toContainText('載入中');
+  await expect(page.locator('#status')).not.toContainText('加载中');
 });
