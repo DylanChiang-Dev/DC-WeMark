@@ -1,6 +1,12 @@
 // 應用入口：載入 wasm，串起編輯器、預覽、複製、主題、草稿。
 
 import { copyHtml } from './clipboard.js';
+import {
+  applyWechatDark,
+  clearWechatDark,
+  isDarkmodeReady,
+  loadDarkmode,
+} from './darkmode.js';
 import { createTextareaEditor } from './editor.js';
 import {
   initEngine,
@@ -26,6 +32,7 @@ import {
   loadFontFamily,
   loadFontSize,
   loadLocale,
+  loadPreviewScheme,
   loadScrollSync,
   loadTheme,
   migrateAppearancePreferences,
@@ -34,8 +41,10 @@ import {
   saveFontFamily,
   saveFontSize,
   saveLocale,
+  savePreviewScheme,
   saveScrollSync,
   saveTheme,
+  type PreviewScheme,
 } from './storage.js';
 import { countWords, debounce, downloadText } from './util.js';
 
@@ -66,6 +75,7 @@ let currentFontSize = loadFontSize();
 let currentFontFamily = loadFontFamily();
 let currentLocale = loadLocale();
 let scrollSyncEnabled = loadScrollSync();
+let previewScheme: PreviewScheme = loadPreviewScheme();
 let lastHtml = '';
 let settingsController: SettingsController | undefined;
 
@@ -103,7 +113,9 @@ function renderPreview(): void {
   try {
     const result = render(md, currentPreset.engineTheme, opts);
     lastHtml = result.html;
+    clearWechatDark();
     previewEl.innerHTML = result.html;
+    applyPreviewScheme();
     maybeLoadHighlighter(md);
     showResultStatus(result);
   } catch (err) {
@@ -138,6 +150,50 @@ function showResultStatus(result: RenderResult): void {
     notes.push(`${result.remoteImages} 张网络图片会由公众号转存，若显示失败请改在公众号内上传`);
   }
   setStatus(notes.length > 0 ? notes.join('；') : '就绪');
+}
+
+/** 深色預覽：預覽 DOM 套用微信深色演算法；複製仍使用 lastHtml，不受影響。 */
+function applyPreviewScheme(): void {
+  const dark = previewScheme === 'dark';
+  phoneEl.classList.toggle('is-dark', dark);
+  $('schemeNote').hidden = !dark;
+  if (!dark) return;
+  if (!isDarkmodeReady()) {
+    loadDarkmode().then(
+      () => renderPreview(),
+      () => {
+        setPreviewScheme('light');
+        toast('深色预览加载失败，已切回浅色；刷新页面可重试');
+      },
+    );
+    return;
+  }
+  try {
+    applyWechatDark(previewEl);
+  } catch {
+    setPreviewScheme('light');
+    toast('深色预览转换失败，已切回浅色');
+  }
+}
+
+function setPreviewScheme(scheme: PreviewScheme): void {
+  previewScheme = scheme;
+  savePreviewScheme(scheme);
+  const group = $('schemeToggle');
+  const active = group.querySelector<HTMLButtonElement>(`[data-scheme="${scheme}"]`);
+  if (active) setPressed(group, active);
+  renderPreview();
+}
+
+function setupSchemeToggle(): void {
+  const group = $('schemeToggle');
+  const active = group.querySelector<HTMLButtonElement>(`[data-scheme="${previewScheme}"]`);
+  if (active) setPressed(group, active);
+  for (const btn of group.querySelectorAll<HTMLButtonElement>('button')) {
+    btn.addEventListener('click', () => {
+      setPreviewScheme(btn.dataset.scheme === 'dark' ? 'dark' : 'light');
+    });
+  }
 }
 
 let toastTimer: ReturnType<typeof setTimeout> | undefined;
@@ -309,6 +365,7 @@ async function boot(): Promise<void> {
   setupFileIO();
   setupMobileToggle();
   setupScrollSync();
+  setupSchemeToggle();
   $('copyBtn').addEventListener('click', () => void onCopy());
 
   const draft = loadDraft();

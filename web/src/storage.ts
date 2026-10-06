@@ -10,6 +10,7 @@ const FONT_SIZE_KEY = 'wemark:font-size:v1';
 const FONT_FAMILY_KEY = 'wemark:font-family:v1';
 const SCROLL_SYNC_KEY = 'wemark:scroll-sync:v1';
 const LOCALE_KEY = 'wemark:output-locale:v1';
+const PREVIEW_SCHEME_KEY = 'wemark:preview-scheme:v1';
 const APPEARANCE_MIGRATION_KEY = 'wemark:appearance-migration:v2';
 
 /**
@@ -171,6 +172,25 @@ export function loadLocale(): OutputLocale {
 export function saveLocale(locale: OutputLocale): void {
   try {
     localStorage.setItem(LOCALE_KEY, locale);
+  } catch {
+    // 忽略（隱私模式 / 配額）
+  }
+}
+
+export type PreviewScheme = 'light' | 'dark';
+
+/** 預覽配色只影響畫面模擬，不影響輸出。 */
+export function loadPreviewScheme(): PreviewScheme {
+  try {
+    return localStorage.getItem(PREVIEW_SCHEME_KEY) === 'dark' ? 'dark' : 'light';
+  } catch {
+    return 'light';
+  }
+}
+
+export function savePreviewScheme(scheme: PreviewScheme): void {
+  try {
+    localStorage.setItem(PREVIEW_SCHEME_KEY, scheme);
   } catch {
     // 忽略（隱私模式 / 配額）
   }

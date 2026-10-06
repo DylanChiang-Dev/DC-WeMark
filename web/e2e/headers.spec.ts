@@ -78,5 +78,8 @@ test('built site works under the Cloudflare Pages CSP', async ({ page }) => {
   await expect
     .poll(() => page.locator('#preview pre span[style*="color"]').count(), { timeout: 30_000 })
     .toBeGreaterThan(0);
+  // 延遲載入的微信深色預覽（會注入 <style>）也必須通過 CSP。
+  await page.locator('[data-scheme="dark"]').click();
+  await expect(page.locator('#preview p').first()).toHaveClass(/js_darkmode/, { timeout: 15_000 });
   expect(violations).toEqual([]);
 });

@@ -91,6 +91,15 @@
         ></div>
 
         <section class="pane pane--preview" aria-label="公众号预览">
+          <div class="preview-bar">
+            <p class="preview-bar__note" id="schemeNote" hidden>
+              按微信官方开源的深色算法模拟，实际以手机为准
+            </p>
+            <div class="segmented-bar" id="schemeToggle" role="group" aria-label="预览配色">
+              <button data-scheme="light" class="is-active" type="button" aria-pressed="true">浅色</button>
+              <button data-scheme="dark" type="button" aria-pressed="false" title="模拟微信深色模式下读者看到的效果">深色</button>
+            </div>
+          </div>
           <div class="phone" id="phone">
             <article class="preview" id="preview"></article>
           </div>
@@ -222,7 +231,7 @@
             <label class="background-option">
               <input type="radio" name="backgroundStyle" value="grid" />
               <span class="background-option__preview is-grid"></span>
-              <span><strong>方格纸</strong><small>清楚、带手账质感</small></span>
+              <span><strong>方格纸</strong><small>清楚、带手账质感；微信深色模式下不显示格线</small></span>
             </label>
             <label class="background-option">
               <input type="radio" name="backgroundStyle" value="none" />

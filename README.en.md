@@ -60,6 +60,7 @@ The two middle steps are the crux: the WeChat editor **only accepts rich text wi
 | One-click copy | Writes `text/html` to the clipboard (incl. Safari path); paste into the WeChat editor with all styles intact | ✅ Done |
 | Original themes | One polished Apple theme with a custom accent color | ✅ Done |
 | Typesetting settings | Three copy backgrounds, three font sizes, four font families, visual color choices, two-way scroll sync, and saved preferences | ✅ Done |
+| Dark mode preview | Simulates readers' WeChat dark mode with the official open-source [mp-darkmode](https://github.com/wechatjs/mp-darkmode) algorithm; preview only, the copied HTML is unchanged. Lazy-loaded and covered by contrast regression tests | ✅ Done |
 | Editing UX | Word count, `.md` import/export, Tab indent, `Cmd/Ctrl+B/I`, file drop, local draft | ✅ Done |
 | Code highlighting | Fences with a language (e.g. ` ```rust `) get token coloring; the highlighter is lazy-loaded only when an article contains code, so first load stays small (see [size notes](docs/size-baseline.md)) | ✅ Done |
 

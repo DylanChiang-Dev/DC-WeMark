@@ -12,7 +12,9 @@ accent = "#1677ff"
 
 [palette]
 text = "#2c2c2c"
-muted = "#6b6b6b"
+# 次要文字不可淺於 #5c5c5c：微信深色演算法只反轉夠深的灰，較淺的中灰會原樣保留，
+# 在深色底上對比僅約 3:1（以 mp-darkmode 1.2.2 實測）。
+muted = "#555555"
 border = "#e0e0e0"
 code-bg = "#f2f2f2"
 quote-bg = "#f4f4f4"
