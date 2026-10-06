@@ -31,3 +31,16 @@ syntect 完整語法集含跨語言 embed（HTML 內嵌 CSS/JS、Markdown 內嵌
 2. **vendored 原始語法檔**：在 repo 內放入約 15 種常用語言的 `.sublime-syntax`（授權相容者），build.rs fresh 解析建置精簡 dump（預期語法資料僅數十 KB）。
 
 兩者皆為 additive、不阻塞 0.2.0–0.3.0。
+
+## 2026-10-06 更新：採用延遲載入
+
+已實作上述第 1 案的變體：同一個 `wemark-core` 建置兩份 wasm。
+
+| 檔案 | 用途 | gzip -9 |
+|---|---|---|
+| `web/src/wasm/wemark_core_bg.wasm` | 精簡版（無高亮），首屏載入 | ~123 KB |
+| `web/src/wasm-highlight/wemark_highlight_bg.wasm` | `--features syntax-highlight`，延遲載入 | ~831 KB |
+
+- 前端偵測到帶語言標記的圍欄（```` ```rust ````）才 `import()` 高亮版，載入完成後改用它渲染；兩者輸出除程式碼區塊外一致。範例文章刻意不標語言，首次開啟不觸發下載。
+- 首屏（不含高亮版）約 138 KB gzip，CI 分別設閘：核心 < 260 KB、高亮版 < 960 KB、首屏總和 < 300 KB。
+- 量測確認體積主要來自 syntect／fancy-regex 程式碼本身；語法 dump 約 360 KB（內部已壓縮）。以「抽子集再 build」縮小語法集仍會 index out of bounds panic（syntect 5.3），故第 2 案（vendored 原始語法檔重新建置）仍是進一步縮小的方向。

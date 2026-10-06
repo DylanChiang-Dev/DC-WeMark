@@ -1,7 +1,8 @@
 //! 程式碼區塊高亮 → inline-styled HTML。
 //!
-//! `syntax-highlight` feature（預設開）用 syntect（fancy-regex）產生帶 color 的
-//! span；關閉時退化為純文字轉義（保留區塊外殼樣式），作為體積敏感場景的降級路徑。
+//! `syntax-highlight` feature（預設關）用 syntect（fancy-regex）產生帶 color 的
+//! span；關閉時退化為純文字轉義（保留區塊外殼樣式）。前端首屏載入精簡版，
+//! 文章含程式碼區塊時再延遲載入開啟此 feature 的另一份 wasm。
 
 #[cfg(feature = "syntax-highlight")]
 mod imp {

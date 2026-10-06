@@ -320,7 +320,8 @@ test('Apple Markdown fixture fits phone and wide previews', async ({ page }) => 
 });
 
 test('copy writes text/html to the clipboard', async ({ page, context, browserName }) => {
-  test.skip(browserName === 'webkit', 'WebKit blocks clipboard read in automation');
+  // WebKit／Firefox 的自動化環境無法讀回剪貼簿；寫入邏輯由 clipboard.spec.ts 以替身覆蓋。
+  test.skip(browserName !== 'chromium', 'clipboard read is unavailable in WebKit/Firefox automation');
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   await page.goto('/');
   await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });

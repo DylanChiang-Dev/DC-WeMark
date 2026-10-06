@@ -5,6 +5,7 @@
 pkg/
 pkg-node/
 web/src/wasm/
+web/src/wasm-highlight/
 *.wasm
 
 # Node / frontend

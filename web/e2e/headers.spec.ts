@@ -70,7 +70,13 @@ test('built site works under the Cloudflare Pages CSP', async ({ page }) => {
   });
   await page.goto(`${origin}/`);
   await expect(page.locator('#preview h1')).toBeVisible({ timeout: 15_000 });
-  await page.locator('#editor').fill('# CSP 測試\n\n![圖](https://example.com/a.png)');
+  await page
+    .locator('#editor')
+    .fill('# CSP 測試\n\n![圖](https://example.com/a.png)\n\n```js\nconst a = 1;\n```\n');
   await expect(page.locator('#preview h1')).toHaveText('CSP 測試');
+  // 延遲載入的高亮引擎也必須通過 CSP。
+  await expect
+    .poll(() => page.locator('#preview pre span[style*="color"]').count(), { timeout: 30_000 })
+    .toBeGreaterThan(0);
   expect(violations).toEqual([]);
 });

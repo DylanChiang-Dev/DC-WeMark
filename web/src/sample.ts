@@ -39,7 +39,9 @@ export const SAMPLE_MARKDOWN = `# DC-WeMark：在瀏覽器裡排版公眾號
 
 ### 程式碼
 
-\`\`\`rust
+在圍欄後加上語言名稱（例如 \`\` \`\`\`rust \`\`）即可自動上色。
+
+\`\`\`
 fn main() {
     println!("Hello, 公眾號！");
 }

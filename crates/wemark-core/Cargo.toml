@@ -23,8 +23,8 @@ syntect = { version = "5", optional = true, default-features = false, features =
 
 # syntax-highlight 預設關閉：完整 syntect 語法集 gzip 約 +700KB，會爆掉體積預算。
 # 關閉時程式碼區塊保留主題外殼 + 純文字（可讀、等寬，無 token 上色）。
-# 開啟則得到完整 syntect 高亮但體積大幅上升——適合不在意體積的自架/桌面場景。
-# 未來以「延遲載入的獨立語法資產」提供富高亮而不犧牲首屏體積。
+# 前端另以此 feature 建置一份 wasm（web/src/wasm-highlight），僅在文章含程式碼區塊時
+# 延遲載入，首屏仍只下載精簡版。
 [features]
 default = []
 syntax-highlight = ["dep:syntect"]

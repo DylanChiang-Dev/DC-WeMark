@@ -45,6 +45,33 @@ interface RawRender {
 
 let ready = false;
 
+// 預設用精簡引擎（無語法高亮）；文章含程式碼區塊時再延遲載入含 syntect 的完整引擎，
+// 兩者輸出除程式碼區塊外完全一致，載入完成後無縫切換。
+let renderImpl: typeof wm_render = wm_render;
+let highlighter: Promise<void> | undefined;
+let highlightReady = false;
+
+/** 帶語言標記的圍欄程式碼區塊（```rust / ~~~py）才值得載入高亮引擎。 */
+const FENCE_WITH_LANG = /^ {0,3}(?:`{3,}|~{3,})[ \t]*[^\s`]/m;
+
+export function wantsHighlight(markdown: string): boolean {
+  return FENCE_WITH_LANG.test(markdown);
+}
+
+export function isHighlightReady(): boolean {
+  return highlightReady;
+}
+
+/** 載入高亮引擎（只下載一次；失敗後不自動重試，避免每次輸入都重發請求）。 */
+export function loadHighlighter(): Promise<void> {
+  highlighter ??= import('./wasm-highlight/wemark_highlight.js').then(async (mod) => {
+    await mod.default();
+    renderImpl = mod.wm_render;
+    highlightReady = true;
+  });
+  return highlighter;
+}
+
 export async function initEngine(): Promise<void> {
   if (ready) return;
   await init();
@@ -64,7 +91,7 @@ export function version(): string {
 }
 
 export function render(markdown: string, themeId: string, opts: RenderOptions): RenderResult {
-  const raw = wm_render(
+  const raw = renderImpl(
     markdown,
     themeId,
     opts.externalFootnotes,

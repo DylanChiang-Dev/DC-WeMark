@@ -4,8 +4,11 @@ import { copyHtml } from './clipboard.js';
 import { createTextareaEditor } from './editor.js';
 import {
   initEngine,
+  isHighlightReady,
   listThemes,
+  loadHighlighter,
   render,
+  wantsHighlight,
   type BackgroundStyle,
   type FontFamily,
   type FontSize,
@@ -72,6 +75,22 @@ let settingsController: SettingsController | undefined;
 const editor = createTextareaEditor(editorEl);
 const draftSaver = debouncedSaveDraft(1000);
 const UNDO_HINT = '可按 Cmd/Ctrl+Z 復原';
+let highlightState: 'idle' | 'loading' | 'failed' = 'idle';
+
+function maybeLoadHighlighter(markdown: string): void {
+  if (highlightState !== 'idle' || isHighlightReady() || !wantsHighlight(markdown)) return;
+  highlightState = 'loading';
+  loadHighlighter().then(
+    () => {
+      highlightState = 'idle';
+      renderPreview();
+    },
+    () => {
+      highlightState = 'failed';
+      renderPreview();
+    },
+  );
+}
 
 function renderPreview(): void {
   const md = editor.getValue();
@@ -87,6 +106,7 @@ function renderPreview(): void {
     const result = render(md, currentPreset.engineTheme, opts);
     lastHtml = result.html;
     previewEl.innerHTML = result.html;
+    maybeLoadHighlighter(md);
     showResultStatus(result);
   } catch (err) {
     setStatus(err instanceof Error ? err.message : '渲染失敗', true);
@@ -109,7 +129,12 @@ function showResultStatus(result: RenderResult): void {
     setStatus(`${warnings[0]}${extra}`, true, warnings.join('\n'));
     return;
   }
+  if (highlightState === 'failed') {
+    setStatus('程式碼高亮載入失敗，程式碼區塊以純文字輸出；重新整理頁面可再試', true);
+    return;
+  }
   const notes: string[] = [];
+  if (highlightState === 'loading') notes.push('程式碼高亮載入中…');
   if (result.footnotes > 0) notes.push(`已整理 ${result.footnotes} 條外部連結`);
   if (result.remoteImages > 0) {
     notes.push(`${result.remoteImages} 張網路圖片會由公眾號轉存，若顯示失敗請改在公眾號內上傳`);

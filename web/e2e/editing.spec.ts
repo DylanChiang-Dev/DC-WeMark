@@ -92,3 +92,21 @@ test('markdown footnotes and simplified output titles', async ({ page }) => {
   await page.reload();
   await expect(page.locator('#preview')).toContainText('参考链接', { timeout: 15_000 });
 });
+
+test('highlighter is not downloaded for articles without code', async ({ page }) => {
+  const requests: string[] = [];
+  page.on('request', (request) => requests.push(request.url()));
+  await ready(page);
+  await page.locator('#editor').fill('# 純文字文章\n\n沒有程式碼。');
+  await expect(page.locator('#preview h1')).toHaveText('純文字文章');
+  expect(requests.filter((url) => url.includes('wemark_highlight'))).toEqual([]);
+});
+
+test('code blocks are colour highlighted after lazy loading', async ({ page }) => {
+  await ready(page);
+  await page.locator('#editor').fill('```rust\nfn main() { let x = 1; }\n```\n');
+  const coloured = page.locator('#preview pre span[style*="color"]');
+  await expect.poll(() => coloured.count(), { timeout: 30_000 }).toBeGreaterThan(0);
+  await expect(page.locator('#preview pre')).toContainText('fn main()');
+  await expect(page.locator('#status')).not.toContainText('載入中');
+});

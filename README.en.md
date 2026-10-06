@@ -61,7 +61,7 @@ The two middle steps are the crux: the WeChat editor **only accepts rich text wi
 | Original themes | One polished Apple theme with a custom accent color | ✅ Done |
 | Typesetting settings | Three copy backgrounds, three font sizes, four font families, visual color choices, two-way scroll sync, and saved preferences | ✅ Done |
 | Editing UX | Word count, `.md` import/export, Tab indent, `Cmd/Ctrl+B/I`, file drop, local draft | ✅ Done |
-| Code highlighting | Token coloring (optional feature; off by default to control size, see [size notes](docs/size-baseline.md)) | 🚧 opt-in |
+| Code highlighting | Fences with a language (e.g. ` ```rust `) get token coloring; the highlighter is lazy-loaded only when an article contains code, so first load stays small (see [size notes](docs/size-baseline.md)) | ✅ Done |
 
 New articles only need standard Markdown. The legacy `:::` container syntax still renders for backward compatibility, but has no insertion UI and will not receive new modules ([compatibility notes](docs/container-syntax.md)).
 
@@ -123,7 +123,7 @@ Current version: **1.0.1** (feature-complete, live on Cloudflare Pages).
 - [x] **0.4.0** — Advanced layout modules (now retained only for legacy-document compatibility)
 - [x] **1.0.0** — Cloudflare Pages deploy pipeline (the Docker self-hosting option has since been removed; static hosting only)
 
-Semantic three-part versioning; every release gets a git tag. Next: size optimization for rich code highlighting (lazy-loaded or vendored syntaxes).
+Semantic three-part versioning; every release gets a git tag. Next: shrinking the lazy-loaded highlighter (currently ~830 KB gzipped).
 
 ## ⭐ Star History
 

@@ -4,7 +4,9 @@
   "version": "1.0.1",
   "type": "module",
   "scripts": {
-    "build:wasm": "wasm-pack build ../crates/wemark-core --target web --release --out-dir ../../web/src/wasm",
+    "build:wasm": "npm run build:wasm:core && npm run build:wasm:highlight",
+    "build:wasm:core": "wasm-pack build ../crates/wemark-core --target web --release --out-dir ../../web/src/wasm",
+    "build:wasm:highlight": "wasm-pack build ../crates/wemark-core --target web --release --out-dir ../../web/src/wasm-highlight --out-name wemark_highlight -- --features syntax-highlight",
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
