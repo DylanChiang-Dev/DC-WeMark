@@ -8,6 +8,7 @@ export type CopyResult = 'clipboard-api' | 'exec-command';
  * 在使用者手勢（點擊）的同步呼叫棧內呼叫，Safari 才會接受。
  */
 export async function copyHtml(html: string, plain: string): Promise<CopyResult> {
+  const clipboardHtml = withPixelLineHeights(html);
   if (
     typeof ClipboardItem !== 'undefined' &&
     navigator.clipboard &&
@@ -15,7 +16,7 @@ export async function copyHtml(html: string, plain: string): Promise<CopyResult>
   ) {
     try {
       const item = new ClipboardItem({
-        'text/html': new Blob([html], { type: 'text/html' }),
+        'text/html': new Blob([clipboardHtml], { type: 'text/html' }),
         'text/plain': new Blob([plain], { type: 'text/plain' }),
       });
       await navigator.clipboard.write([item]);
@@ -24,10 +25,55 @@ export async function copyHtml(html: string, plain: string): Promise<CopyResult>
       // 落到後備路徑
     }
   }
-  if (execCommandCopy(html)) {
+  if (execCommandCopy(clipboardHtml)) {
     return 'exec-command';
   }
   throw new Error('clipboard not available');
+}
+
+type LineHeight = { multiplier: number } | { pixels: number };
+
+function pixelLength(value: string, fontSize: number): number | undefined {
+  const match = /^(\d+(?:\.\d+)?)(px|em|%)$/.exec(value);
+  if (!match) return undefined;
+  const size = Number(match[1]);
+  return match[2] === 'px' ? size : size * fontSize / (match[2] === '%' ? 100 : 1);
+}
+
+function withPixelLineHeights(html: string): string {
+  // 在 inert template 內處理引擎的內聯樣式，不改預覽、不載入圖片。
+  const template = document.createElement('template');
+  template.innerHTML = html;
+
+  function visit(element: HTMLElement, parentFontSize: number, inherited?: LineHeight): void {
+    const fontSize = pixelLength(element.style.fontSize, parentFontSize) ?? parentFontSize;
+    const declared = element.style.lineHeight;
+    let lineHeight = inherited;
+    if (declared && declared !== 'inherit') {
+      const pixels = pixelLength(declared, fontSize);
+      const multiplier = Number(declared);
+      lineHeight = pixels !== undefined ? { pixels }
+        : Number.isFinite(multiplier) ? { multiplier } : undefined;
+    }
+    if (lineHeight && (declared || element.textContent?.trim())) {
+      const pixels = 'multiplier' in lineHeight ? lineHeight.multiplier * fontSize : lineHeight.pixels;
+      const value = `${Number(Math.max(fontSize, pixels).toFixed(4))}px`;
+      const original = element.getAttribute('style') ?? '';
+      const style = declared
+        ? original.replace(/(^|;)\s*line-height\s*:[^;]*/gi, `$1line-height:${value}`)
+        : `${original}${original && !original.trimEnd().endsWith(';') ? ';' : ''}line-height:${value};`;
+      element.setAttribute('style', style);
+    }
+    // 傳遞原本的倍率，而非剛寫入的 px，才能保留子元素不同字級的行高。
+    for (const child of element.children) {
+      if (child instanceof HTMLElement) visit(child, fontSize, lineHeight);
+    }
+  }
+
+  for (const element of template.content.children) {
+    if (element instanceof HTMLElement) visit(element, 16);
+  }
+  return template.innerHTML;
 }
 
 function execCommandCopy(html: string): boolean {

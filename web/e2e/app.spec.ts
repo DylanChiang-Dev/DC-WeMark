@@ -345,6 +345,19 @@ test('copy writes text/html to the clipboard', async ({ page, context, browserNa
   expect(html).not.toMatch(/="">/);
   expect(html).not.toContain('font-family:"');
 
+  const lineHeights = await page.evaluate((copiedHtml) => {
+    const template = document.createElement('template');
+    template.innerHTML = copiedHtml;
+    return Array.from(
+      template.content.querySelectorAll<HTMLElement>('section, h1, h2, p, li, th, td'),
+      (element) => element.style.lineHeight,
+    );
+  }, html);
+  expect(lineHeights.length).toBeGreaterThan(0);
+  for (const lineHeight of lineHeights) {
+    expect(lineHeight).toMatch(/^\d+(?:\.\d+)?px$/);
+  }
+
   await page.getByLabel('複製背景').selectOption('none');
   await page.locator('#copyBtn').click();
   await expect.poll(() => readClipboardHtml(page)).not.toContain('background-image:');
