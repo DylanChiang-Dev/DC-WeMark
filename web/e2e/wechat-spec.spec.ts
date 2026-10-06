@@ -3,6 +3,8 @@
 // 以複製出去的 HTML，在官方檢測工具（wechatjs/verify-article-structure-spec）使用的
 // 三種寬度下量測，重現其中與本專案相關的規則：
 //   #1.3 line-height 疊字（多行且平均行高 < 0.95 × 字號）
+//        另含公眾號貼上檢測仍在用的舊版兜底量測（0.2.16）：對有直接文字的區塊
+//        不歸併行內片段，片段數即行數，夾著 code／sup 的段落會被誤報。
 //   #1.8 pre 水平溢出
 //   #1.4 段落水平溢出
 //   #4.1.2 文字背景漸層（須以 data-ignore-dm 聲明）
@@ -109,12 +111,31 @@ async function inspect(page: Page, html: string): Promise<Finding[]> {
         return avg < fontSize * 0.95 ? `${avg.toFixed(1)} < 0.95 × ${fontSize}` : null;
       };
 
+      // 舊版兜底：只看有直接文字的區塊，每個非零高 rect 都算一行。
+      const blockTags = new Set(['P', 'DIV', 'SECTION', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'LI', 'TD', 'A']);
+      const legacyOverlap = (node: Element) => {
+        if (!blockTags.has(node.tagName)) return null;
+        const direct = Array.from(node.childNodes).some(
+          (c) => c.nodeType === Node.TEXT_NODE && !!c.textContent?.trim(),
+        );
+        if (!direct) return null;
+        const fontSize = parseFloat(getComputedStyle(node).fontSize);
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        const count = Array.from(range.getClientRects()).filter((r) => r.height > 0).length;
+        if (count < 2) return null;
+        const avg = range.getBoundingClientRect().height / count;
+        return avg < fontSize * 0.95 ? `${avg.toFixed(1)} < 0.95 × ${fontSize}` : null;
+      };
+
       for (const width of screens) {
         sandbox.style.width = `${width}px`;
         for (const node of sandbox.querySelectorAll('*')) {
           if (!node.textContent?.trim()) continue;
           const hit = overlap(node);
           if (hit) findings.push({ rule: 'line-height', width, detail: `${node.tagName} ${hit}` });
+          const legacy = legacyOverlap(node);
+          if (legacy) findings.push({ rule: 'line-height-legacy', width, detail: `${node.tagName} ${legacy}` });
         }
         for (const pre of sandbox.querySelectorAll('pre')) {
           if (pre.scrollWidth > pre.clientWidth + 1) {
@@ -164,9 +185,10 @@ test('the spec check catches undersized line heights and overflowing code', asyn
     page,
     '<section style="font-size:16px;line-height:12px;">'
       + '一段很长很长的文字，一段很长很长的文字，一段很长很长的文字，一段很长很长的文字，一段很长很长的文字。</section>'
+      + '<p style="font-size:16px;line-height:30px;">装好后，从 <code>boya</code> 开始。</p>'
       + '<pre style="white-space:pre;">' + 'x'.repeat(400) + '</pre>'
       + '<section style="background-image:linear-gradient(#fff,#eee);">渐变上的文字</section>',
   );
   const rules = new Set(findings.map((f) => f.rule));
-  expect(rules).toEqual(new Set(['line-height', 'pre-overflow', 'text-bg-gradient']));
+  expect(rules).toEqual(new Set(['line-height', 'line-height-legacy', 'pre-overflow', 'text-bg-gradient']));
 });

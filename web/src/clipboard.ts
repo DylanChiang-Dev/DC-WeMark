@@ -8,7 +8,7 @@ export type CopyResult = 'clipboard-api' | 'exec-command';
  * 在使用者手勢（點擊）的同步呼叫棧內呼叫，Safari 才會接受。
  */
 export async function copyHtml(html: string, plain: string): Promise<CopyResult> {
-  const clipboardHtml = withPixelLineHeights(html);
+  const clipboardHtml = prepareForWechat(html);
   if (
     typeof ClipboardItem !== 'undefined' &&
     navigator.clipboard &&
@@ -40,11 +40,33 @@ function pixelLength(value: string, fontSize: number): number | undefined {
   return match[2] === 'px' ? size : size * fontSize / (match[2] === '%' ? 100 : 1);
 }
 
-function withPixelLineHeights(html: string): string {
+function prepareForWechat(html: string): string {
   // 在 inert template 內處理引擎的內聯樣式，不改預覽、不載入圖片。
   const template = document.createElement('template');
   template.innerHTML = html;
+  wrapMixedText(template.content);
+  withPixelLineHeights(template.content);
+  return template.innerHTML;
+}
 
+/**
+ * 公眾號貼上時的疊字檢測會把「有直接文字的區塊」的每個行內片段都算成一行，
+ * 段落裡只要夾著 <code>、<sup> 等行內元素，平均行高就被稀釋而誤報。
+ * 把與元素混排的直接文字包進 <span>，區塊便不再有直接文字；版面不變。
+ */
+function wrapMixedText(root: DocumentFragment): void {
+  for (const element of root.querySelectorAll('*')) {
+    if (element.closest('pre, svg') || element.children.length === 0) continue;
+    for (const node of Array.from(element.childNodes)) {
+      if (node.nodeType !== Node.TEXT_NODE || !node.textContent?.trim()) continue;
+      const span = document.createElement('span');
+      node.replaceWith(span);
+      span.append(node);
+    }
+  }
+}
+
+function withPixelLineHeights(root: DocumentFragment): void {
   function visit(element: HTMLElement, parentFontSize: number, inherited?: LineHeight): void {
     const fontSize = pixelLength(element.style.fontSize, parentFontSize) ?? parentFontSize;
     const declared = element.style.lineHeight;
@@ -70,10 +92,9 @@ function withPixelLineHeights(html: string): string {
     }
   }
 
-  for (const element of template.content.children) {
+  for (const element of root.children) {
     if (element instanceof HTMLElement) visit(element, 16);
   }
-  return template.innerHTML;
 }
 
 function execCommandCopy(html: string): boolean {

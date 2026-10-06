@@ -41,15 +41,26 @@ for (const fontSize of ['small', 'medium', 'large']) {
       const holder = document.createElement('div');
       holder.innerHTML = copiedHtml;
       document.body.appendChild(holder);
+      // 複製時為混排文字補上的包裝 span 只帶 line-height，不屬於預覽結構。
+      const isWrapper = (element: HTMLElement) =>
+        element.tagName === 'SPAN' && /^line-height:[^;]+;?$/.test(element.getAttribute('style') ?? '');
+      const all = Array.from(holder.querySelector('section')!.querySelectorAll<HTMLElement>('*'));
       try {
         return {
           via,
           copiedPlain,
           unchanged: article.outerHTML === before,
           previewMetrics,
-          elements: Array.from(holder.querySelector('section')!.querySelectorAll<HTMLElement>('*'), (element) => {
+          mixedText: all
+            .filter((element) => !element.closest('pre') && element.children.length > 0)
+            .filter((element) => Array.from(element.childNodes).some(
+              (node) => node.nodeType === Node.TEXT_NODE && !!node.textContent?.trim(),
+            ))
+            .map((element) => element.tagName),
+          elements: all.map((element) => {
             const style = getComputedStyle(element);
             return {
+              wrapper: isWrapper(element),
               tag: element.tagName,
               fontSize: style.fontSize,
               lineHeight: style.lineHeight,
@@ -68,8 +79,10 @@ for (const fontSize of ['small', 'medium', 'large']) {
     expect(result.copiedPlain).toBe(markdown);
     expect(result.unchanged).toBe(true);
     expect(result.rootLineHeight).toMatch(/^\d+(?:\.\d+)?px$/);
-    expect(result.elements).toHaveLength(result.previewMetrics.length);
-    result.elements.forEach((element, index) => {
+    expect(result.mixedText).toEqual([]);
+    const structural = result.elements.filter((element) => !element.wrapper);
+    expect(structural).toHaveLength(result.previewMetrics.length);
+    structural.forEach((element, index) => {
       const original = result.previewMetrics[index];
       expect(element.tag).toBe(original.tag);
       expect(element.fontSize).toBe(original.fontSize);
