@@ -279,18 +279,24 @@ function setupMobileToggle(): void {
 // 依比例把左欄捲動同步到右欄預覽（單向，避免回饋迴圈）。
 function setupScrollSync(): void {
   const previewPane = document.querySelector<HTMLElement>('.pane--preview')!;
-  let lockedTarget: HTMLElement | null = null;
+  // 記錄程式設定的捲動位置；對應的 scroll 事件只要停在該位置就略過，
+  // 不靠時間鎖，避免慢速影格下把使用者的捲動誤判為回饋而吞掉。
+  const programmatic = new WeakMap<HTMLElement, number>();
 
   const sync = (source: HTMLElement, target: HTMLElement) => {
-    if (!scrollSyncEnabled || lockedTarget === source) return;
+    if (!scrollSyncEnabled) return;
+    const expected = programmatic.get(source);
+    if (expected !== undefined) {
+      programmatic.delete(source);
+      if (Math.abs(source.scrollTop - expected) <= 1) return;
+    }
     const sourceMax = source.scrollHeight - source.clientHeight;
     const targetMax = target.scrollHeight - target.clientHeight;
     if (sourceMax <= 0 || targetMax <= 0) return;
-    lockedTarget = target;
+    const before = target.scrollTop;
     target.scrollTop = (source.scrollTop / sourceMax) * targetMax;
-    requestAnimationFrame(() => {
-      lockedTarget = null;
-    });
+    // 位置沒變就不會觸發 scroll 事件，不能留下記錄。
+    if (Math.abs(target.scrollTop - before) > 1) programmatic.set(target, target.scrollTop);
   };
 
   editorEl.addEventListener('scroll', () => sync(editorEl, previewPane));
