@@ -12,11 +12,17 @@ export interface ThemeMeta {
 export interface RenderResult {
   html: string;
   footnotes: number;
+  /** 網路圖片數：貼進公眾號時由編輯器轉存，遇到防盜鏈可能失敗。 */
+  remoteImages: number;
+  /** 排版警告（不安全連結、本機圖片等）。 */
+  warnings: string[];
 }
 
 export type BackgroundStyle = 'warm' | 'grid' | 'none';
 export type FontSize = 'small' | 'medium' | 'large';
 export type FontFamily = 'theme' | 'sans' | 'serif' | 'kai';
+/** 腳註與參考連結標題的字形：繁體／簡體。 */
+export type OutputLocale = 'hant' | 'hans';
 
 export interface RenderOptions {
   externalFootnotes: boolean;
@@ -25,12 +31,15 @@ export interface RenderOptions {
   background: BackgroundStyle;
   fontSize: FontSize;
   fontFamily: FontFamily;
+  locale: OutputLocale;
 }
 
 interface RawRender {
   ok: boolean;
   html?: string;
   footnotes?: number;
+  remoteImages?: number;
+  warnings?: string[];
   error?: string;
 }
 
@@ -63,10 +72,16 @@ export function render(markdown: string, themeId: string, opts: RenderOptions): 
     opts.background,
     opts.fontSize,
     opts.fontFamily,
+    opts.locale,
   );
   const parsed = JSON.parse(raw) as RawRender;
   if (!parsed.ok) {
     throw new Error(parsed.error ?? 'render failed');
   }
-  return { html: parsed.html ?? '', footnotes: parsed.footnotes ?? 0 };
+  return {
+    html: parsed.html ?? '',
+    footnotes: parsed.footnotes ?? 0,
+    remoteImages: parsed.remoteImages ?? 0,
+    warnings: parsed.warnings ?? [],
+  };
 }

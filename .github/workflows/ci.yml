@@ -15,9 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          components: rustfmt, clippy
+      - name: install Rust (pinned by rust-toolchain.toml)
+        run: rustup toolchain install
       - uses: Swatinem/rust-cache@v2
       - name: rustfmt
         run: cargo fmt --all --check
@@ -35,14 +34,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: wasm32-unknown-unknown
+      - name: install Rust (pinned by rust-toolchain.toml)
+        run: rustup toolchain install
       - uses: Swatinem/rust-cache@v2
-      - name: install wasm-pack
+      - name: install wasm-pack (pinned, same as deploy/build-pages.sh)
         uses: jetli/wasm-pack-action@v0.4.0
         with:
-          version: latest
+          version: v0.13.1
       - name: build wasm (lean default)
         run: wasm-pack build crates/wemark-core --target web --release --out-dir ../../web/src/wasm
       - name: wasm gzip size gate (< 260 KB)
@@ -69,9 +67,9 @@ jobs:
             -exec sh -c 'gzip -9 -c "$1" | wc -c' _ {} \; | awk '{s+=$1} END {print s}')
           echo "total gzip size: $((total/1024)) KB ($total bytes)"
           [ "$total" -le $((300*1024)) ] || { echo "::error::site gzip $((total/1024)) KB exceeds 300 KB"; exit 1; }
-      - name: install Playwright (chromium)
+      - name: install Playwright (chromium + webkit)
         working-directory: web
-        run: npx playwright install --with-deps chromium
-      - name: e2e (chromium)
+        run: npx playwright install --with-deps chromium webkit
+      - name: e2e (chromium + webkit)
         working-directory: web
-        run: npx playwright test --project=chromium
+        run: npx playwright test

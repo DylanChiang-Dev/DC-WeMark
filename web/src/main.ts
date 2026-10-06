@@ -10,6 +10,7 @@ import {
   type FontFamily,
   type FontSize,
   type RenderOptions,
+  type RenderResult,
 } from './engine.js';
 import { SAMPLE_MARKDOWN } from './sample.js';
 import { createSettingsPanel, type SettingsController } from './settings.js';
@@ -20,13 +21,13 @@ import {
   type ThemePreset,
 } from './theme-presets.js';
 import {
-  clearDraft,
   debouncedSaveDraft,
   loadAccent,
   loadBackground,
   loadDraft,
   loadFontFamily,
   loadFontSize,
+  loadLocale,
   loadScrollSync,
   loadTheme,
   migrateAppearancePreferences,
@@ -34,6 +35,7 @@ import {
   saveBackground,
   saveFontFamily,
   saveFontSize,
+  saveLocale,
   saveScrollSync,
   saveTheme,
 } from './storage.js';
@@ -62,12 +64,14 @@ let currentAccent = loadAccent(); // 空 = 用主題預設
 let currentBackground = loadBackground();
 let currentFontSize = loadFontSize();
 let currentFontFamily = loadFontFamily();
+let currentLocale = loadLocale();
 let scrollSyncEnabled = loadScrollSync();
 let lastHtml = '';
 let settingsController: SettingsController | undefined;
 
 const editor = createTextareaEditor(editorEl);
-const persistDraft = debouncedSaveDraft(1000);
+const draftSaver = debouncedSaveDraft(1000);
+const UNDO_HINT = '可按 Cmd/Ctrl+Z 復原';
 
 function renderPreview(): void {
   const md = editor.getValue();
@@ -77,22 +81,40 @@ function renderPreview(): void {
     background: currentBackground,
     fontSize: currentFontSize,
     fontFamily: currentFontFamily,
+    locale: currentLocale,
   };
   try {
     const result = render(md, currentPreset.engineTheme, opts);
     lastHtml = result.html;
     previewEl.innerHTML = result.html;
-    setStatus(result.footnotes > 0 ? `已整理 ${result.footnotes} 條外部連結` : '就緒');
+    showResultStatus(result);
   } catch (err) {
-    setStatus(err instanceof Error ? err.message : '渲染失敗');
+    setStatus(err instanceof Error ? err.message : '渲染失敗', true);
   }
   wordcountEl.textContent = `${countWords(md)} 字`;
 }
 
 const debouncedRender = debounce(renderPreview, 200);
 
-function setStatus(text: string): void {
+function setStatus(text: string, warning = false, detail = text): void {
   statusEl.textContent = text;
+  statusEl.title = detail;
+  statusEl.classList.toggle('is-warning', warning);
+}
+
+function showResultStatus(result: RenderResult): void {
+  const { warnings } = result;
+  if (warnings.length > 0) {
+    const extra = warnings.length > 1 ? `（另有 ${warnings.length - 1} 項提醒）` : '';
+    setStatus(`${warnings[0]}${extra}`, true, warnings.join('\n'));
+    return;
+  }
+  const notes: string[] = [];
+  if (result.footnotes > 0) notes.push(`已整理 ${result.footnotes} 條外部連結`);
+  if (result.remoteImages > 0) {
+    notes.push(`${result.remoteImages} 張網路圖片會由公眾號轉存，若顯示失敗請改在公眾號內上傳`);
+  }
+  setStatus(notes.length > 0 ? notes.join('；') : '就緒');
 }
 
 let toastTimer: ReturnType<typeof setTimeout> | undefined;
@@ -161,9 +183,10 @@ function setupFileIO(): void {
   fileInput.addEventListener('change', () => {
     const file = fileInput.files?.[0];
     if (!file) return;
-    file.text().then((text) => {
-      editor.setValue(text);
+    void file.text().then((text) => {
+      editor.replaceAll(text);
       fileInput.value = '';
+      toast(`已匯入 ${file.name}，${UNDO_HINT}`);
     });
   });
   $('exportBtn').addEventListener('click', () => {
@@ -216,9 +239,15 @@ async function boot(): Promise<void> {
   const draft = loadDraft();
   editor.setValue(draft && draft.trim() ? draft : SAMPLE_MARKDOWN);
   editor.onChange((value) => {
-    persistDraft(value);
+    draftSaver.save(value);
     debouncedRender();
   });
+  editor.onFileDrop((name) => toast(`已載入 ${name}，${UNDO_HINT}`));
+  // 關閉或切走分頁前立即寫入，避免遺失 debounce 期間的最後修改。
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') draftSaver.flush();
+  });
+  window.addEventListener('pagehide', () => draftSaver.flush());
 
   try {
     await initEngine();
@@ -289,6 +318,7 @@ async function boot(): Promise<void> {
       background: currentBackground,
       fontSize: currentFontSize,
       fontFamily: currentFontFamily,
+      locale: currentLocale,
       accent: currentAccent,
       scrollSync: scrollSyncEnabled,
     },
@@ -298,6 +328,11 @@ async function boot(): Promise<void> {
       onBackground: setBackground,
       onFontSize: setFontSize,
       onFontFamily: setFontFamily,
+      onLocale(locale) {
+        currentLocale = locale;
+        saveLocale(locale);
+        renderPreview();
+      },
       onScrollSync(enabled) {
         scrollSyncEnabled = enabled;
         saveScrollSync(enabled);
@@ -311,9 +346,8 @@ async function boot(): Promise<void> {
 
   // 提供「清空草稿」的隱藏入口：雙擊字數
   wordcountEl.addEventListener('dblclick', () => {
-    clearDraft();
-    editor.setValue(SAMPLE_MARKDOWN);
-    toast('已清空草稿');
+    editor.replaceAll(SAMPLE_MARKDOWN);
+    toast(`已清空草稿，${UNDO_HINT}`);
   });
 }
 

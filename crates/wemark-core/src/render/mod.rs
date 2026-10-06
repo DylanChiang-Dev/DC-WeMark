@@ -8,8 +8,8 @@ mod containers;
 
 use comrak::nodes::{AstNode, ListType, NodeList, NodeTable, NodeValue, TableAlignment};
 
-use crate::compat;
-use crate::options::RenderOptions;
+use crate::compat::{self, UrlKind};
+use crate::options::{Locale, RenderOptions};
 use crate::theme::{style, Style, Theme};
 
 const HEADING: [&str; 6] = ["h1", "h2", "h3", "h4", "h5", "h6"];
@@ -22,9 +22,14 @@ pub struct Writer {
     font_delta_px: i16,
     font_family: crate::FontFamily,
     external_footnotes: bool,
+    locale: Locale,
     out: String,
     footnotes: Vec<(String, String)>,
     pub warnings: Vec<String>,
+    /// 網路圖片數（供前端提示轉存風險）。
+    pub remote_images: usize,
+    /// 已輸出的 Markdown 腳註定義數；>0 表示註釋區塊已開啟。
+    notes: usize,
     /// 是否處於 tight list 語境（段落不加 <p> 外殼）。
     tight: bool,
     /// 目前開啟中的 `:::` 容器數（用於文末自動閉合未關閉的容器）。
@@ -44,9 +49,12 @@ impl Writer {
             font_delta_px: opts.font_size.delta_px(),
             font_family: opts.font_family,
             external_footnotes: opts.external_links_as_footnotes,
+            locale: opts.locale,
             out: String::new(),
             footnotes: Vec::new(),
             warnings: Vec::new(),
+            remote_images: 0,
+            notes: 0,
             tight: false,
             container_depth: 0,
         }
@@ -59,11 +67,9 @@ impl Writer {
     /// 渲染整份文件，回傳被根 <section> 包裹的完整 HTML。
     pub fn finish<'a>(&mut self, root: &'a AstNode<'a>) -> String {
         self.render_children(root);
-        // 自動閉合未關閉的容器（寬容處理，不吞內容）
-        while self.container_depth > 0 {
+        self.close_containers();
+        if self.notes > 0 {
             self.out.push_str("</section>");
-            self.container_depth -= 1;
-            self.warnings.push("未閉合的排版容器已自動閉合".to_string());
         }
         if self.external_footnotes && !self.footnotes.is_empty() {
             self.render_references();
@@ -74,6 +80,15 @@ impl Writer {
         }
         let st = style::inject(st, self.background.css());
         format!("<section{st}>{}</section>", std::mem::take(&mut self.out))
+    }
+
+    /// 自動閉合未關閉的容器（寬容處理，不吞內容）。
+    fn close_containers(&mut self) {
+        while self.container_depth > 0 {
+            self.out.push_str("</section>");
+            self.container_depth -= 1;
+            self.warnings.push("未閉合的排版容器已自動閉合".to_string());
+        }
     }
 
     fn render_style(&self, pairs: Style) -> String {
@@ -87,11 +102,11 @@ impl Writer {
     }
 
     fn render_node<'a>(&mut self, node: &'a AstNode<'a>) {
-        let value = node.data.borrow().value.clone();
-        match value {
+        let data = node.data.borrow();
+        match &data.value {
             NodeValue::Document => self.render_children(node),
             NodeValue::Heading(h) => {
-                let tag = HEADING[(h.level.clamp(1, 6) - 1) as usize];
+                let tag = HEADING[usize::from(h.level.clamp(1, 6) - 1)];
                 self.wrap(tag, tag, node);
             }
             NodeValue::Paragraph => {
@@ -101,7 +116,7 @@ impl Writer {
                     self.wrap("p", "p", node);
                 }
             }
-            NodeValue::Text(t) => self.out.push_str(&escape(&t)),
+            NodeValue::Text(t) => self.out.push_str(&escape(t)),
             NodeValue::Strong => self.wrap("strong", "strong", node),
             NodeValue::Emph => self.wrap("em", "em", node),
             NodeValue::Strikethrough => self.wrap("del", "del", node),
@@ -115,7 +130,7 @@ impl Writer {
             NodeValue::Link(l) => self.render_link(node, &l.url),
             NodeValue::Image(l) => self.render_image(node, &l.url),
             NodeValue::BlockQuote => self.wrap("blockquote", "blockquote", node),
-            NodeValue::List(nl) => self.render_list(node, &nl),
+            NodeValue::List(nl) => self.render_list(node, nl),
             NodeValue::Item(_) => self.wrap("li", "li", node),
             NodeValue::TaskItem(ti) => self.render_task_item(node, ti.symbol),
             NodeValue::CodeBlock(cb) => self.render_code_block(&cb.info, &cb.literal),
@@ -123,9 +138,16 @@ impl Writer {
                 let st = self.render_style(self.theme.element("hr"));
                 self.out.push_str(&format!("<hr{st}>"));
             }
-            NodeValue::Table(t) => self.render_table(node, &t),
+            NodeValue::Table(t) => self.render_table(node, t),
             NodeValue::HtmlBlock(h) => self.handle_html_block(&h.literal),
-            NodeValue::HtmlInline(h) => self.out.push_str(&escape(&h)),
+            NodeValue::HtmlInline(h) => self.out.push_str(&escape(h)),
+            NodeValue::FootnoteReference(r) => {
+                let st = self.render_style(self.theme.element("footnote-sup"));
+                let label = self.locale.note_label();
+                self.out
+                    .push_str(&format!("<sup{st}>[{label}{}]</sup>", r.ix));
+            }
+            NodeValue::FootnoteDefinition(_) => self.render_note(node),
             _ => self.render_children(node),
         }
     }
@@ -145,9 +167,21 @@ impl Writer {
 
     fn render_link<'a>(&mut self, node: &'a AstNode<'a>, url: &str) {
         let inner = self.capture(|w| w.render_children(node));
+        if !compat::is_safe_url(url, UrlKind::Link) {
+            self.out.push_str(&inner);
+            self.warnings
+                .push(format!("已移除不安全的連結：{}", plain_text(&inner)));
+            return;
+        }
         if self.external_footnotes && compat::is_external_link(url) {
-            self.footnotes.push((inner.clone(), url.to_string()));
-            let n = self.footnotes.len();
+            // 同一網址重複出現時沿用第一次的編號。
+            let n = match self.footnotes.iter().position(|(_, u)| u == url) {
+                Some(i) => i + 1,
+                None => {
+                    self.footnotes.push((inner.clone(), url.to_string()));
+                    self.footnotes.len()
+                }
+            };
             let st = self.render_style(self.theme.element("footnote-sup"));
             self.out.push_str(&inner);
             self.out.push_str(&format!("<sup{st}>[{n}]</sup>"));
@@ -161,6 +195,26 @@ impl Writer {
     fn render_image<'a>(&mut self, node: &'a AstNode<'a>, url: &str) {
         // alt 來自子節點：render_children 已對文字做 HTML 轉義，strip_tags 去標籤後可直接放入屬性。
         let alt = strip_tags(&self.capture(|w| w.render_children(node)));
+        let label = if alt.is_empty() {
+            url.to_string()
+        } else {
+            plain_text(&alt)
+        };
+        if compat::is_local_image(url) {
+            self.warnings.push(format!(
+                "圖片「{label}」是本機或相對路徑，貼進公眾號後無法顯示，請改用網路圖片或在公眾號內上傳"
+            ));
+        }
+        if !compat::is_safe_url(url, UrlKind::Image) {
+            if !compat::is_local_image(url) {
+                self.warnings.push(format!("已移除不安全的圖片：{label}"));
+            }
+            self.out.push_str(&alt);
+            return;
+        }
+        if !compat::is_local_image(url) && !url.trim().to_ascii_lowercase().starts_with("data:") {
+            self.remote_images += 1;
+        }
         let st = self.render_style(self.theme.element("img"));
         self.out
             .push_str(&format!("<img src=\"{}\" alt=\"{alt}\"{st}>", escape(url)));
@@ -270,13 +324,37 @@ impl Writer {
         }
     }
 
+    /// Markdown 腳註定義（comrak 已依引用順序移到文末）：首個定義開啟註釋區塊。
+    fn render_note<'a>(&mut self, node: &'a AstNode<'a>) {
+        if self.notes == 0 {
+            self.close_containers();
+            let sec = self.render_style(self.theme.element("footnote-section"));
+            let title = self.render_style(self.theme.element("footnote-title"));
+            self.out.push_str(&format!(
+                "<section{sec}><p{title}>{}</p>",
+                self.locale.notes_title()
+            ));
+        }
+        self.notes += 1;
+        let item = self.render_style(self.theme.element("footnote-item"));
+        let label = self.locale.note_label();
+        self.out
+            .push_str(&format!("<section{item}>[{label}{}] ", self.notes));
+        let saved = self.tight;
+        self.tight = true;
+        self.render_children(node);
+        self.tight = saved;
+        self.out.push_str("</section>");
+    }
+
     fn render_references(&mut self) {
-        let fns = self.footnotes.clone();
+        let fns = std::mem::take(&mut self.footnotes);
         let sec = self.render_style(self.theme.element("footnote-section"));
         let title = self.render_style(self.theme.element("footnote-title"));
         let item = self.render_style(self.theme.element("footnote-item"));
         self.out.push_str(&format!("<section{sec}>"));
-        self.out.push_str(&format!("<p{title}>參考連結</p>"));
+        self.out
+            .push_str(&format!("<p{title}>{}</p>", self.locale.references_title()));
         for (i, (text, url)) in fns.iter().enumerate() {
             self.out.push_str(&format!(
                 "<p{item}>[{}] {text} — {}</p>",
@@ -285,6 +363,7 @@ impl Writer {
             ));
         }
         self.out.push_str("</section>");
+        self.footnotes = fns;
     }
 
     /// 暫時把輸出換成空 buffer 執行 f，回傳期間產生的片段（用於連結/圖片子渲染）。
@@ -307,6 +386,15 @@ pub(crate) fn escape(s: &str) -> String {
         }
     }
     o
+}
+
+/// 把渲染後的 HTML 片段轉回純文字（用於警告訊息，前端以 textContent 顯示）。
+fn plain_text(html: &str) -> String {
+    strip_tags(html)
+        .replace("&lt;", "<")
+        .replace("&gt;", ">")
+        .replace("&quot;", "\"")
+        .replace("&amp;", "&")
 }
 
 fn strip_tags(s: &str) -> String {

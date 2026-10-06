@@ -58,7 +58,7 @@ flowchart LR
 | 功能 | 說明 | 狀態 |
 |---|---|---|
 | 雙欄編輯器 | 左側 Markdown 輸入，右側公眾號樣式即時預覽（含拖分隔線、手機/寬版切換） | ✅ 完成 |
-| 排版引擎 | CommonMark + GFM（表格、程式碼區塊、任務清單），輸出公眾號相容的 inline-styled HTML | ✅ 完成 |
+| 排版引擎 | CommonMark + GFM（表格、程式碼區塊、任務清單、腳註），輸出公眾號相容的 inline-styled HTML | ✅ 完成 |
 | 一鍵複製 | 以 `text/html` 寫入剪貼簿（含 Safari 相容路徑），貼進公眾號編輯器保留全部樣式 | ✅ 完成 |
 | 原創主題 | 目前唯一的蘋果風精修主題，支援自訂強調色 | ✅ 完成 |
 | 排版設定 | 三種複製背景、三檔字號、四種文章字體、視覺選色、雙向捲動同步與偏好儲存 | ✅ 完成 |
@@ -73,13 +73,7 @@ flowchart LR
 
 **線上版**：[dc-wemark.pages.dev](https://dc-wemark.pages.dev)，打開即用、無需安裝。
 
-**自架（Docker，一行啟動）**：
-
-```bash
-docker build -f deploy/Dockerfile -t dc-wemark .
-docker run -p 8080:80 dc-wemark
-# 打開 http://localhost:8080
-```
+**自架**：依下方「本地開發」執行 `npm run build`，把 `web/dist/` 放到任何靜態檔案主機即可；不需要後端或容器。
 
 ## 🧱 技術架構
 
@@ -87,9 +81,9 @@ docker run -p 8080:80 dc-wemark
 |---|---|---|
 | 排版核心 | Rust（編譯至 WebAssembly） | Markdown 解析、主題樣式內聯、公眾號 HTML 相容處理 |
 | 前端殼 | Vite + 原生 TypeScript（零框架） | 雙欄編輯器、主題切換、剪貼簿寫入 |
-| 部署 | Cloudflare Pages（主）／Docker + nginx（自架） | 純靜態檔案分發，無伺服器邏輯 |
+| 部署 | Cloudflare Pages | 純靜態檔案分發，無伺服器邏輯；安全標頭見 `web/public/_headers` |
 
-選 Rust + WASM 而不是純 JavaScript，是為了同一個排版核心將來可以直接複用到 CLI 或其他形態，且核心邏輯有完整的型別與測試保障。整站 gzip 約 130KB。
+選 Rust + WASM 而不是純 JavaScript，是為了同一個排版核心將來可以直接複用到 CLI 或其他形態，且核心邏輯有完整的型別與測試保障。整站 gzip 約 140KB。
 
 ## 🛠️ 本地開發
 
@@ -112,7 +106,7 @@ npm run dev            # http://localhost:5173
 
 # 其他
 npm run build          # 產出 dist/（tsc 型別檢查 + vite build）
-npm run test:e2e       # Playwright e2e（chromium + webkit）
+npm run test:e2e       # Playwright e2e（chromium + webkit，含 dist 的 CSP 檢查，需先 build）
 ```
 
 ## ☁️ 部署到 Cloudflare Pages
@@ -129,13 +123,13 @@ Cloudflare Pages 直接連接 GitHub 倉庫 `DylanChiang-Dev/DC-WeMark`：
 
 ## 📌 專案狀態與路線圖
 
-目前版本：**1.0.1**（功能完成，Cloudflare Pages 線上版與 Docker 自架均已就緒）。
+目前版本：**1.0.1**（功能完成，Cloudflare Pages 線上版已就緒）。
 
 - [x] **0.1.0** — 排版引擎 MVP：Markdown → 公眾號相容 HTML，含 1 套預設主題
 - [x] **0.2.0** — 雙欄編輯器 + 即時預覽 + 一鍵複製
 - [x] **0.3.0** — 蘋果風主題與主題切換 + 自訂強調色
 - [x] **0.4.0** — 進階排版模組（現僅作舊文稿相容）
-- [x] **1.0.0** — Docker 自架方案 + Cloudflare Pages 部署流程
+- [x] **1.0.0** — Cloudflare Pages 部署流程（當時的 Docker 自架方案已移除，專案只保留靜態部署）
 
 版本採三段式語意化版號，每個版本打 git tag。後續：富程式碼高亮的體積最佳化（延遲載入或 vendored 語法檔）。
 

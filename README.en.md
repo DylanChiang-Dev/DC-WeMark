@@ -56,7 +56,7 @@ The two middle steps are the crux: the WeChat editor **only accepts rich text wi
 | Feature | Description | Status |
 |---|---|---|
 | Split-pane editor | Markdown input on the left, live WeChat-styled preview on the right (draggable divider, phone/wide toggle) | ✅ Done |
-| Typesetting engine | CommonMark + GFM (tables, code blocks, task lists) to WeChat-compatible inline-styled HTML | ✅ Done |
+| Typesetting engine | CommonMark + GFM (tables, code blocks, task lists, footnotes) to WeChat-compatible inline-styled HTML | ✅ Done |
 | One-click copy | Writes `text/html` to the clipboard (incl. Safari path); paste into the WeChat editor with all styles intact | ✅ Done |
 | Original themes | One polished Apple theme with a custom accent color | ✅ Done |
 | Typesetting settings | Three copy backgrounds, three font sizes, four font families, visual color choices, two-way scroll sync, and saved preferences | ✅ Done |
@@ -71,13 +71,7 @@ Theme development is intentionally sequential: the Apple theme must pass a real 
 
 **Hosted**: [dc-wemark.pages.dev](https://dc-wemark.pages.dev), zero install.
 
-**Self-hosted (Docker, one line)**:
-
-```bash
-docker build -f deploy/Dockerfile -t dc-wemark .
-docker run -p 8080:80 dc-wemark
-# open http://localhost:8080
-```
+**Self-hosted**: run `npm run build` (see Development below) and serve `web/dist/` from any static file host; no backend or container needed.
 
 ## 🧱 Architecture
 
@@ -85,9 +79,9 @@ docker run -p 8080:80 dc-wemark
 |---|---|---|
 | Typesetting core | Rust (compiled to WebAssembly) | Markdown parsing, theme style inlining, WeChat HTML compatibility |
 | Frontend shell | Vite + vanilla TypeScript (no framework) | Split-pane editor, theme switching, clipboard write |
-| Deployment | Cloudflare Pages (primary) / Docker + nginx (self-host) | Static file serving, no server logic |
+| Deployment | Cloudflare Pages | Static file serving, no server logic; security headers in `web/public/_headers` |
 
-Rust + WASM instead of plain JavaScript, so the same core can later be reused in a CLI or other form factors, with full type and test coverage on the core logic. Total site is ~130 KB gzipped.
+Rust + WASM instead of plain JavaScript, so the same core can later be reused in a CLI or other form factors, with full type and test coverage on the core logic. Total site is ~140 KB gzipped.
 
 ## 🛠️ Development
 
@@ -104,7 +98,7 @@ npm install
 npm run build:wasm       # build WASM into the frontend
 npm run dev              # http://localhost:5173
 npm run build            # produce dist/
-npm run test:e2e         # Playwright e2e
+npm run test:e2e         # Playwright e2e (chromium + webkit, incl. CSP check on dist; build first)
 ```
 
 ## ☁️ Deploy to Cloudflare Pages
@@ -121,13 +115,13 @@ Builds and deployments run entirely on Cloudflare, with no GitHub Secrets or loc
 
 ## 📌 Status & Roadmap
 
-Current version: **1.0.1** (feature-complete, with Cloudflare Pages hosting and Docker self-hosting ready).
+Current version: **1.0.1** (feature-complete, live on Cloudflare Pages).
 
 - [x] **0.1.0** — Engine MVP: Markdown → WeChat-compatible HTML, with 1 default theme
 - [x] **0.2.0** — Split-pane editor + live preview + one-click copy
 - [x] **0.3.0** — Apple theme and theme switching + custom accent
 - [x] **0.4.0** — Advanced layout modules (now retained only for legacy-document compatibility)
-- [x] **1.0.0** — Docker self-hosting + Cloudflare Pages deploy pipeline
+- [x] **1.0.0** — Cloudflare Pages deploy pipeline (the Docker self-hosting option has since been removed; static hosting only)
 
 Semantic three-part versioning; every release gets a git tag. Next: size optimization for rich code highlighting (lazy-loaded or vendored syntaxes).
 

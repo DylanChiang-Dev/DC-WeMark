@@ -1,4 +1,4 @@
-use wemark_core::{render, BackgroundStyle, FontFamily, FontSize, RenderOptions};
+use wemark_core::{render, BackgroundStyle, FontFamily, FontSize, Locale, RenderOptions};
 
 fn r(md: &str) -> String {
     render(md, "default", &RenderOptions::default())
@@ -363,4 +363,107 @@ fn every_theme_renders_rich_doc_without_forbidden() {
             );
         }
     }
+}
+
+#[test]
+fn unsafe_link_keeps_text_but_drops_href() {
+    let res = render(
+        "點 [這裡](javascript:alert(1)) 看看",
+        "default",
+        &RenderOptions::default(),
+    )
+    .unwrap();
+    assert!(!res.html.contains("javascript:"), "{}", res.html);
+    assert!(!res.html.contains("<a "), "{}", res.html);
+    assert!(res.html.contains("這裡"));
+    assert!(res.warnings.iter().any(|w| w.contains("不安全的連結")));
+}
+
+#[test]
+fn unsafe_image_is_replaced_by_alt_text() {
+    let res = render(
+        "![示意](javascript:alert(1))",
+        "default",
+        &RenderOptions::default(),
+    )
+    .unwrap();
+    assert!(!res.html.contains("<img"), "{}", res.html);
+    assert!(res.html.contains("示意"));
+    assert!(res.warnings.iter().any(|w| w.contains("不安全的圖片")));
+
+    let res = render(
+        "[A & B](javascript:x)",
+        "default",
+        &RenderOptions::default(),
+    )
+    .unwrap();
+    assert!(
+        res.warnings.iter().any(|w| w.ends_with("A & B")),
+        "{:?}",
+        res.warnings
+    );
+}
+
+#[test]
+fn local_images_warn_and_remote_images_are_counted() {
+    let res = render(
+        "![本機](./a.png)\n\n![網路](https://example.com/b.png)",
+        "default",
+        &RenderOptions::default(),
+    )
+    .unwrap();
+    assert!(
+        res.warnings.iter().any(|w| w.contains("本機")),
+        "{:?}",
+        res.warnings
+    );
+    assert_eq!(res.remote_images, 1);
+}
+
+#[test]
+fn repeated_external_url_reuses_footnote_number() {
+    let res = render(
+        "[A](https://example.com) 與 [B](https://example.com) 及 [C](https://rust-lang.org)",
+        "default",
+        &RenderOptions::default(),
+    )
+    .unwrap();
+    assert_eq!(res.footnotes, 2);
+    assert_eq!(res.html.matches("[1]").count(), 3, "{}", res.html);
+    assert!(res.html.contains("[2]"));
+    assert!(!res.html.contains("[3]"));
+}
+
+#[test]
+fn markdown_footnotes_render_as_notes() {
+    let html = r("正文[^a]與第二處[^b]。\n\n[^b]: 第二條\n[^a]: 第一條\n");
+    assert!(!html.contains("[^a]"), "{html}");
+    assert!(html.contains("[註1]") && html.contains("[註2]"), "{html}");
+    assert!(html.contains("註釋"), "{html}");
+    let first = html.find("[註1] 第一條").expect("note 1 text");
+    let second = html.find("[註2] 第二條").expect("note 2 text");
+    assert!(first < second, "{html}");
+    assert_eq!(
+        html.matches("<section").count(),
+        html.matches("</section>").count()
+    );
+}
+
+#[test]
+fn simplified_locale_changes_generated_titles() {
+    let html = render(
+        "見[^1] [Rust](https://www.rust-lang.org)\n\n[^1]: 說明\n",
+        "default",
+        &RenderOptions {
+            locale: Locale::Hans,
+            ..RenderOptions::default()
+        },
+    )
+    .unwrap()
+    .html;
+    assert!(
+        html.contains("参考链接") && html.contains("注释") && html.contains("[注1]"),
+        "{html}"
+    );
+    assert!(!html.contains("參考連結"), "{html}");
 }

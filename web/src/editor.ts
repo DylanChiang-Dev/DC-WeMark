@@ -2,9 +2,13 @@
 
 export interface EditorAdapter {
   getValue(): string;
+  /** 程式設定內容（不進復原紀錄），只用於初次載入。 */
   setValue(v: string): void;
-  insertSnippet(text: string): void;
+  /** 以使用者編輯的方式整篇取代，可用 Cmd/Ctrl+Z 復原。 */
+  replaceAll(v: string): void;
   onChange(cb: (value: string) => void): void;
+  /** 拖入檔案並取代內容後通知（參數為檔名）。 */
+  onFileDrop(cb: (fileName: string) => void): void;
   focus(): void;
 }
 
@@ -12,18 +16,20 @@ const INDENT = '  ';
 
 export function createTextareaEditor(el: HTMLTextAreaElement): EditorAdapter {
   const listeners: Array<(v: string) => void> = [];
+  const dropListeners: Array<(name: string) => void> = [];
   const emit = () => {
     for (const cb of listeners) cb(el.value);
   };
 
+  // 原生編輯與 replaceRange 都會觸發 input，統一由這裡通知。
   el.addEventListener('input', emit);
 
   el.addEventListener('keydown', (e: KeyboardEvent) => {
+    if (e.isComposing) return;
     // Tab / Shift+Tab 縮排
     if (e.key === 'Tab') {
       e.preventDefault();
       indentSelection(el, e.shiftKey);
-      emit();
       return;
     }
     // Cmd/Ctrl + B / I 包裹語法
@@ -32,11 +38,9 @@ export function createTextareaEditor(el: HTMLTextAreaElement): EditorAdapter {
       if (k === 'b') {
         e.preventDefault();
         wrapSelection(el, '**', '**');
-        emit();
       } else if (k === 'i') {
         e.preventDefault();
         wrapSelection(el, '*', '*');
-        emit();
       }
     }
   });
@@ -48,9 +52,9 @@ export function createTextareaEditor(el: HTMLTextAreaElement): EditorAdapter {
     if (!file) return;
     if (!/\.(md|markdown|txt)$/i.test(file.name)) return;
     e.preventDefault();
-    file.text().then((text) => {
-      el.value = text;
-      emit();
+    void file.text().then((text) => {
+      replaceRange(el, 0, el.value.length, text);
+      for (const cb of dropListeners) cb(file.name);
     });
   });
 
@@ -60,51 +64,70 @@ export function createTextareaEditor(el: HTMLTextAreaElement): EditorAdapter {
       el.value = v;
       emit();
     },
-    insertSnippet: (text: string) => {
-      const { selectionStart, selectionEnd, value } = el;
-      el.value = value.slice(0, selectionStart) + text + value.slice(selectionEnd);
-      const caret = selectionStart + text.length;
-      el.selectionStart = el.selectionEnd = caret;
-      el.focus();
-      emit();
-    },
+    replaceAll: (v: string) => replaceRange(el, 0, el.value.length, v),
     onChange: (cb) => listeners.push(cb),
+    onFileDrop: (cb) => dropListeners.push(cb),
     focus: () => el.focus(),
   };
+}
+
+/**
+ * 以「使用者輸入」的方式取代 [start, end)，讓瀏覽器保留原生復原紀錄。
+ * execCommand 雖已標為過時，但仍是 textarea 保留 Cmd/Ctrl+Z 的唯一通用做法；
+ * 不支援時退回 setRangeText（無法復原，但內容正確）。
+ */
+function replaceRange(el: HTMLTextAreaElement, start: number, end: number, raw: string): void {
+  // textarea 一律以 \n 儲存換行；先正規化，才能正確比對插入結果。
+  const text = raw.replace(/\r\n?/g, '\n');
+  if (start === end && text === '') return;
+  if (el.value.slice(start, end) === text) return;
+  el.focus();
+  el.setSelectionRange(start, end);
+  let ok = false;
+  try {
+    ok =
+      text === ''
+        ? document.execCommand('delete')
+        : document.execCommand('insertText', false, text);
+  } catch {
+    ok = false;
+  }
+  if (!ok || el.value.slice(start, start + text.length) !== text) {
+    el.setRangeText(text, start, end, 'end');
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+  }
 }
 
 function indentSelection(el: HTMLTextAreaElement, outdent: boolean): void {
   const { selectionStart, selectionEnd, value } = el;
   const lineStart = value.lastIndexOf('\n', selectionStart - 1) + 1;
-  const before = value.slice(0, lineStart);
   const selected = value.slice(lineStart, selectionEnd);
-  const after = value.slice(selectionEnd);
 
   if (outdent) {
     const dedented = selected.replace(/^ {1,2}/gm, '');
-    el.value = before + dedented + after;
     const removed = selected.length - dedented.length;
-    el.selectionStart = Math.max(lineStart, selectionStart - Math.min(INDENT.length, removed));
-    el.selectionEnd = selectionEnd - removed;
+    if (removed === 0) return;
+    const firstRemoved = selected.length - selected.replace(/^ {1,2}/, '').length;
+    replaceRange(el, lineStart, selectionEnd, dedented);
+    el.setSelectionRange(
+      Math.max(lineStart, selectionStart - firstRemoved),
+      selectionEnd - removed,
+    );
   } else if (selectionStart === selectionEnd) {
-    el.value = value.slice(0, selectionStart) + INDENT + value.slice(selectionStart);
-    el.selectionStart = el.selectionEnd = selectionStart + INDENT.length;
+    replaceRange(el, selectionStart, selectionEnd, INDENT);
   } else {
     const indented = selected.replace(/^/gm, INDENT);
-    el.value = before + indented + after;
-    el.selectionStart = selectionStart + INDENT.length;
-    el.selectionEnd = selectionEnd + (indented.length - selected.length);
+    replaceRange(el, lineStart, selectionEnd, indented);
+    el.setSelectionRange(
+      selectionStart + INDENT.length,
+      selectionEnd + (indented.length - selected.length),
+    );
   }
 }
 
 function wrapSelection(el: HTMLTextAreaElement, open: string, close: string): void {
   const { selectionStart, selectionEnd, value } = el;
   const selected = value.slice(selectionStart, selectionEnd);
-  el.value = value.slice(0, selectionStart) + open + selected + close + value.slice(selectionEnd);
-  if (selected) {
-    el.selectionStart = selectionStart + open.length;
-    el.selectionEnd = selectionEnd + open.length;
-  } else {
-    el.selectionStart = el.selectionEnd = selectionStart + open.length;
-  }
+  replaceRange(el, selectionStart, selectionEnd, open + selected + close);
+  el.setSelectionRange(selectionStart + open.length, selectionEnd + open.length);
 }

@@ -4,8 +4,11 @@ use wasm_bindgen::prelude::*;
 
 use crate::RenderOptions;
 
-/// 渲染。回傳 JSON：成功 `{"ok":true,"html":"…","footnotes":n}`，
+/// 渲染。回傳 JSON：成功
+/// `{"ok":true,"html":"…","footnotes":n,"remoteImages":n,"warnings":["…"]}`，
 /// 失敗 `{"ok":false,"error":"…"}`。`accent` 空字串表示不覆寫。
+// wasm 邊界維持扁平參數，避免在 JS 端多一層序列化。
+#[allow(clippy::too_many_arguments)]
 #[wasm_bindgen]
 pub fn wm_render(
     markdown: &str,
@@ -15,6 +18,7 @@ pub fn wm_render(
     background: &str,
     font_size: &str,
     font_family: &str,
+    locale: &str,
 ) -> String {
     let opts = RenderOptions {
         external_links_as_footnotes: external_footnotes,
@@ -26,13 +30,24 @@ pub fn wm_render(
         background: crate::BackgroundStyle::from(background),
         font_size: crate::FontSize::from(font_size),
         font_family: crate::FontFamily::from(font_family),
+        locale: crate::Locale::from(locale),
     };
     match crate::render(markdown, theme_id, &opts) {
-        Ok(r) => format!(
-            "{{\"ok\":true,\"html\":{},\"footnotes\":{}}}",
-            json_str(&r.html),
-            r.footnotes
-        ),
+        Ok(r) => {
+            let warnings: Vec<String> = r
+                .warnings
+                .iter()
+                .map(String::as_str)
+                .map(json_str)
+                .collect();
+            format!(
+                "{{\"ok\":true,\"html\":{},\"footnotes\":{},\"remoteImages\":{},\"warnings\":[{}]}}",
+                json_str(&r.html),
+                r.footnotes,
+                r.remote_images,
+                warnings.join(",")
+            )
+        }
         Err(e) => format!("{{\"ok\":false,\"error\":{}}}", json_str(&e.to_string())),
     }
 }

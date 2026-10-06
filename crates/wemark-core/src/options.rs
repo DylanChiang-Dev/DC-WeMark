@@ -94,6 +94,48 @@ impl FontFamily {
     }
 }
 
+/// 輸出文字（腳註、參考連結標題等）使用的中文字形。
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Locale {
+    /// 繁體中文
+    #[default]
+    Hant,
+    /// 簡體中文
+    Hans,
+}
+
+impl From<&str> for Locale {
+    fn from(value: &str) -> Self {
+        match value {
+            "hans" => Self::Hans,
+            _ => Self::Hant,
+        }
+    }
+}
+
+impl Locale {
+    pub(crate) fn references_title(self) -> &'static str {
+        match self {
+            Self::Hant => "參考連結",
+            Self::Hans => "参考链接",
+        }
+    }
+
+    pub(crate) fn notes_title(self) -> &'static str {
+        match self {
+            Self::Hant => "註釋",
+            Self::Hans => "注释",
+        }
+    }
+
+    pub(crate) fn note_label(self) -> &'static str {
+        match self {
+            Self::Hant => "註",
+            Self::Hans => "注",
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct RenderOptions {
     /// 外部連結（非 mp.weixin.qq.com）是否轉為文末腳註。
@@ -106,6 +148,8 @@ pub struct RenderOptions {
     pub font_size: FontSize,
     /// 文章字體；Theme 表示沿用主題設定。
     pub font_family: FontFamily,
+    /// 腳註與參考連結標題的字形。
+    pub locale: Locale,
 }
 
 impl Default for RenderOptions {
@@ -116,6 +160,7 @@ impl Default for RenderOptions {
             background: BackgroundStyle::default(),
             font_size: FontSize::default(),
             font_family: FontFamily::default(),
+            locale: Locale::default(),
         }
     }
 }

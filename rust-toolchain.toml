@@ -1,4 +1,5 @@
 [toolchain]
-channel = "stable"
+# 固定版本，避免上游 stable 更新讓 CI／Cloudflare 建置突然失敗；升級時改這裡。
+channel = "1.99.0"
 components = ["rustfmt", "clippy"]
 targets = ["wasm32-unknown-unknown"]

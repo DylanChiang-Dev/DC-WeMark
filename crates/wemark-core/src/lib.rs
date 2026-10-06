@@ -11,13 +11,15 @@ mod theme;
 #[cfg(target_arch = "wasm32")]
 mod wasm;
 
-pub use options::{BackgroundStyle, FontFamily, FontSize, RenderOptions};
+pub use options::{BackgroundStyle, FontFamily, FontSize, Locale, RenderOptions};
 pub use theme::{Theme, ThemeMeta};
 
 /// 渲染結果。
 pub struct RenderResult {
     pub html: String,
     pub footnotes: usize,
+    /// 網路圖片數（貼進公眾號時由編輯器轉存，可能因防盜鏈失敗）。
+    pub remote_images: usize,
     pub warnings: Vec<String>,
 }
 
@@ -52,11 +54,13 @@ pub fn render(
     let mut writer = render::Writer::new(theme, opts);
     let html = writer.finish(root);
     let footnotes = writer.footnote_count();
+    let remote_images = writer.remote_images;
     let warnings = std::mem::take(&mut writer.warnings);
 
     Ok(RenderResult {
         html,
         footnotes,
+        remote_images,
         warnings,
     })
 }

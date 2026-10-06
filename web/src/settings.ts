@@ -1,4 +1,4 @@
-import type { BackgroundStyle, FontFamily, FontSize } from './engine.js';
+import type { BackgroundStyle, FontFamily, FontSize, OutputLocale } from './engine.js';
 import { getThemePreset, THEME_PRESETS, type ThemePreset } from './theme-presets.js';
 
 interface SettingsState {
@@ -7,6 +7,7 @@ interface SettingsState {
   background: BackgroundStyle;
   fontSize: FontSize;
   fontFamily: FontFamily;
+  locale: OutputLocale;
   scrollSync: boolean;
 }
 
@@ -16,6 +17,7 @@ interface SettingsHandlers {
   onBackground(background: BackgroundStyle): void;
   onFontSize(fontSize: FontSize): void;
   onFontFamily(fontFamily: FontFamily): void;
+  onLocale(locale: OutputLocale): void;
   onScrollSync(enabled: boolean): void;
 }
 
@@ -60,6 +62,7 @@ export function createSettingsPanel(
   const scrollSync = byId<HTMLInputElement>('scrollSync');
   const fontSizeGroup = byId<HTMLElement>('fontSizeGroup');
   const fontFamilyGroup = byId<HTMLElement>('fontFamilyGroup');
+  const localeGroup = byId<HTMLElement>('localeGroup');
   let state = { ...initial };
 
   const close = () => {
@@ -208,6 +211,14 @@ export function createSettingsPanel(
     });
   }
 
+  for (const button of localeGroup.querySelectorAll<HTMLButtonElement>('[data-locale]')) {
+    button.addEventListener('click', () => {
+      state.locale = button.dataset.locale === 'hans' ? 'hans' : 'hant';
+      syncLocale();
+      handlers.onLocale(state.locale);
+    });
+  }
+
   scrollSync.addEventListener('change', () => {
     state.scrollSync = scrollSync.checked;
     handlers.onScrollSync(state.scrollSync);
@@ -246,6 +257,14 @@ export function createSettingsPanel(
     }
   };
 
+  const syncLocale = () => {
+    for (const button of localeGroup.querySelectorAll<HTMLButtonElement>('[data-locale]')) {
+      const selected = button.dataset.locale === state.locale;
+      button.classList.toggle('is-active', selected);
+      button.setAttribute('aria-pressed', String(selected));
+    }
+  };
+
   renderCurrentTheme();
   renderGallery();
   renderAccentOptions();
@@ -253,6 +272,7 @@ export function createSettingsPanel(
   syncBackground();
   syncFontSize();
   syncFontFamily();
+  syncLocale();
   scrollSync.checked = state.scrollSync;
 
   return {

@@ -1,6 +1,6 @@
 // localStorage 草稿與偏好（全本地，符合隱私承諾）。
 
-import type { BackgroundStyle, FontFamily, FontSize } from './engine.js';
+import type { BackgroundStyle, FontFamily, FontSize, OutputLocale } from './engine.js';
 
 const DRAFT_KEY = 'wemark:draft:v1';
 const THEME_KEY = 'wemark:theme:v1';
@@ -9,6 +9,7 @@ const BACKGROUND_KEY = 'wemark:background:v1';
 const FONT_SIZE_KEY = 'wemark:font-size:v1';
 const FONT_FAMILY_KEY = 'wemark:font-family:v1';
 const SCROLL_SYNC_KEY = 'wemark:scroll-sync:v1';
+const LOCALE_KEY = 'wemark:output-locale:v1';
 const APPEARANCE_MIGRATION_KEY = 'wemark:appearance-migration:v2';
 
 /**
@@ -158,11 +159,46 @@ export function saveScrollSync(enabled: boolean): void {
   }
 }
 
-/** 回傳一個 debounce 後的存草稿函式。 */
-export function debouncedSaveDraft(delayMs: number): (text: string) => void {
+export function loadLocale(): OutputLocale {
+  try {
+    return localStorage.getItem(LOCALE_KEY) === 'hans' ? 'hans' : 'hant';
+  } catch {
+    return 'hant';
+  }
+}
+
+export function saveLocale(locale: OutputLocale): void {
+  try {
+    localStorage.setItem(LOCALE_KEY, locale);
+  } catch {
+    // 忽略（隱私模式 / 配額）
+  }
+}
+
+export interface DraftSaver {
+  /** 延遲存檔（連續輸入只存最後一次）。 */
+  save(text: string): void;
+  /** 立即寫入尚未存檔的內容；用於分頁隱藏或關閉前。 */
+  flush(): void;
+}
+
+/** 回傳一個 debounce 後的存草稿器，可在離開頁面前 flush。 */
+export function debouncedSaveDraft(delayMs: number): DraftSaver {
   let timer: ReturnType<typeof setTimeout> | undefined;
-  return (text: string) => {
+  let pending: string | undefined;
+  const flush = () => {
     if (timer) clearTimeout(timer);
-    timer = setTimeout(() => saveDraft(text), delayMs);
+    timer = undefined;
+    if (pending === undefined) return;
+    saveDraft(pending);
+    pending = undefined;
+  };
+  return {
+    save(text: string) {
+      pending = text;
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(flush, delayMs);
+    },
+    flush,
   };
 }

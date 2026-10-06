@@ -1,0 +1,12 @@
+# Cloudflare Pages 回應標頭（建置時由 Vite 原樣複製到 dist/）。
+# CSP：WebAssembly 需要 wasm-unsafe-eval；預覽的 inline style 屬性需要 style-src 'unsafe-inline'。
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+
+# Vite 產出的資產帶內容雜湊，可長期快取。
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable

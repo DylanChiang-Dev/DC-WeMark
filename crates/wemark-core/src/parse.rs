@@ -8,5 +8,6 @@ pub fn options<'a>() -> Options<'a> {
     o.extension.strikethrough = true;
     o.extension.tasklist = true;
     o.extension.autolink = true;
+    o.extension.footnotes = true;
     o
 }
