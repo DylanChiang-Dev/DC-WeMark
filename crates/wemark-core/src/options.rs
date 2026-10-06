@@ -29,6 +29,16 @@ impl BackgroundStyle {
             Self::None => "",
         }
     }
+
+    /// 根節點額外屬性。方格紙必須以漸層繪製，文字壓在漸層上會觸發公眾號
+    /// 「文字背景尽量不要使用渐变」提示；深色模式下格線消失但文字可讀
+    /// （已以官方 mp-darkmode 驗證），依規範 #4.6 以 data-ignore-dm 聲明。
+    pub(crate) fn root_attrs(self) -> &'static str {
+        match self {
+            Self::Grid => " data-ignore-dm=\"text-bg-gradient\"",
+            Self::Warm | Self::None => "",
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]

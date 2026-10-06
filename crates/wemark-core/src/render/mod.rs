@@ -79,7 +79,11 @@ impl Writer {
             st = style::inject(st, &format!("font-family:{font_family};"));
         }
         let st = style::inject(st, self.background.css());
-        format!("<section{st}>{}</section>", std::mem::take(&mut self.out))
+        let attrs = self.background.root_attrs();
+        format!(
+            "<section{st}{attrs}>{}</section>",
+            std::mem::take(&mut self.out)
+        )
     }
 
     /// 自動閉合未關閉的容器（寬容處理，不吞內容）。

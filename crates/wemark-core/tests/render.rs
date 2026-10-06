@@ -66,6 +66,11 @@ fn background_styles_render_distinct_root_styles() {
             has_grid
         );
         assert_eq!(root_tag.contains("background-size:24px 24px;"), has_grid);
+        // 只有用漸層畫格線的方格紙需要聲明深色模式豁免。
+        assert_eq!(
+            root_tag.contains("data-ignore-dm=\"text-bg-gradient\""),
+            has_grid
+        );
         if let Some(color) = color {
             assert!(root_tag.contains(color), "{root_tag}");
         } else {
@@ -176,6 +181,10 @@ fn code_block_has_themed_shell_and_escaped_content() {
         "code content should be escaped: {html}"
     );
     assert!(html.contains("let"), "code text missing: {html}");
+    // 公眾號會對手機上水平溢出的 <pre> 提示風險，程式碼必須自動換行。
+    assert!(html.contains("white-space:pre-wrap;"), "{html}");
+    assert!(!html.contains("white-space:pre;"), "{html}");
+    assert!(!html.contains("overflow-x:"), "{html}");
 }
 
 #[cfg(feature = "syntax-highlight")]

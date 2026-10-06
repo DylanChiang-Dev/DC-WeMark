@@ -208,5 +208,6 @@ margin = "22px 0"
 border-radius = "10px"
 border = "1px solid {{border}}"
 box-shadow = "0 4px 14px rgba(0,0,0,0.06)"
-overflow-x = "auto"
-white-space = "pre"
+# 自動換行：公眾號規範 #1.8／#2.8 會對手機上水平溢出的 <pre> 提示風險。
+white-space = "pre-wrap"
+word-break = "break-all"
